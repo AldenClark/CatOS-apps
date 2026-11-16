@@ -44,11 +44,18 @@ Use an SDK matching the target OpenWrt release and architecture. OpenWrt 24.10 p
 
 ## Signed APK binary feed
 
-The repository includes an independently signed binary feed publishing workflow for OpenWrt 25.12.6. Once its first release has been published, users can install the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem) and add the matching `packages.adb` URL to their OpenWrt APK repositories.
+The repository includes an independently signed binary feed publishing workflow for OpenWrt 25.12.6. On a supported OpenWrt device, connect over SSH as root and run:
+
+```sh
+wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
+apk add luci-app-catos-notify
+```
+
+The setup script checks the exact OpenWrt release and APK architecture, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), adds the matching signed `packages.adb` URL, and runs `apk update`. It **does not install any application packages**. You can also install only `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
 
 Supported publishing targets are `x86_64`, `aarch64_generic`, and `mips_24kc`. The binary feed is not compatible with OpenWrt 24.10's `opkg` package manager.
 
-See the [binary feed installation and publishing guide](docs/binary-feed.md). Repository URLs become available after the first successful **Publish signed APK feed** workflow deployment.
+See the [binary feed installation and publishing guide](docs/binary-feed.md). The setup script is published together with each successful **Publish signed APK feed** workflow deployment.
 
 ## Repository layout
 

@@ -12,11 +12,24 @@ CatOS Apps provides a signed APK package repository for compatible OpenWrt syste
 
 The binary repository requires OpenWrt's APK package manager. OpenWrt 24.10 devices using `opkg` should use the [source feed](../README.md#add-the-source-feed) to build packages instead.
 
-**Development status:** The packages currently contain configuration and LuCI frameworks. Notification delivery, dynamic DNS updates, and ACME certificate issuance are not yet available. These packages should not be deployed on production systems.
+**Development status:** CatOS Notify has an initial functional implementation awaiting SDK and real-device validation. CatOS DDNS and CatOS ACME remain early package skeletons. These packages are not yet production-ready.
 
-The download URLs below become available after the first successful GitHub Pages publication.
+The download URLs are deployed through the **Publish signed APK feed** workflow.
 
 ## Install the repository on OpenWrt
+
+Connect to a supported OpenWrt device over SSH as root, then run:
+
+```sh
+wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
+apk add luci-app-catos-notify
+```
+
+The script configures the signing key, chooses the correct signed package index, and runs `apk update`. It is safe to run again and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). The script refuses unsupported releases or architectures and rejects unexpected signing-key changes.
+
+### Manual setup
+
+You can also configure the repository without the setup script:
 
 1. Confirm that the device runs a supported OpenWrt release and package architecture:
 
@@ -29,7 +42,7 @@ The download URLs below become available after the first successful GitHub Pages
 2. Download the public signing key:
 
    ```sh
-   mkdir -p /etc/apk/keys
+   mkdir -p /etc/apk/keys /etc/apk/repositories.d
    wget -O /etc/apk/keys/catos-apk.pem \
      https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
    ```

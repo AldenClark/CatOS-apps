@@ -21,3 +21,4 @@ jobs:
           bash scripts/check-feed.sh
           bash scripts/test-assemble-apk-feed.sh
           bash scripts/test-notify-structure.sh
+          bash scripts/test-feed-bootstrap.sh

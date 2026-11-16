@@ -44,11 +44,18 @@ make package/feeds/catos/catos-notify/compile V=s
 
 ## 已签名 APK 二进制软件源
 
-本仓库包含面向 OpenWrt 25.12.6 的 APK 软件源构建、签名及发布工作流。首次成功发布后，用户可下载[软件源公钥](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem)，并在 OpenWrt 的 APK 配置中添加与系统版本及架构对应的 `packages.adb` 地址。
+本仓库包含面向 OpenWrt 25.12.6 的 APK 软件源构建、签名及发布工作流。在支持的 OpenWrt 设备上，以 root 身份通过 SSH 执行：
+
+```sh
+wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
+apk add luci-app-catos-notify
+```
+
+安装脚本会校验 OpenWrt 精确版本及 APK 架构，下载[软件源公钥](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem)，写入匹配的 `packages.adb` 地址，并执行 `apk update`。脚本**不会自动安装任何应用软件包**。如不需要 LuCI，也可以单独安装 `catos-notify`、`catos-ddns` 或 `catos-acme`。
 
 目前发布配置包含 `x86_64`、`aarch64_generic` 和 `mips_24kc` 三种架构。二进制软件源不适用于使用 `opkg` 的 OpenWrt 24.10。
 
-参见[APK 软件源安装与发布说明](docs/binary-feed.zh-CN.md)。公开下载地址将在 **Publish signed APK feed** 工作流首次成功部署后生效。
+参见[APK 软件源安装与发布说明](docs/binary-feed.zh-CN.md)。安装脚本会随每次成功运行的 **Publish signed APK feed** 工作流同步发布。
 
 ## 仓库结构
 
