@@ -36,6 +36,7 @@ return view.extend({
 
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
+		o.rmempty = false;
 		o = s.option(form.Value, 'event', _('Event ID'));
 		events.forEach(function(item) { o.value(item[0], item[1]); });
 		o.rmempty = false;

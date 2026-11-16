@@ -3,6 +3,7 @@
 'require form';
 'require rpc';
 'require ui';
+'require uci';
 
 var testChannel = rpc.declare({
 	object: 'catos.notify',
@@ -22,6 +23,7 @@ return view.extend({
 
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
+		o.rmempty = false;
 
 		o = s.option(form.Value, 'name', _('Display name'));
 		o.rmempty = false;
@@ -91,13 +93,30 @@ return view.extend({
 
 		o = s.option(form.Button, '_test', _('Send test'));
 		o.inputstyle = 'apply';
+		// Only offer testing in the channel list, after leaving the edit modal.
+		// The backend reads committed UCI; staged changes must be applied first.
+		o.modalonly = false;
 		o.onclick = function(ev, sectionId) {
-			return testChannel(sectionId, 'CatOS Notify test', 'This is a test notification.')
+			return uci.changes().then(function(changes) {
+				if (changes.catos_notify && changes.catos_notify.length) {
+					ui.addNotification(null, E('p', {},
+						_('Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination.')),
+						'warning');
+					return;
+				}
+				return testChannel(sectionId, 'CatOS Notify test', 'This is a test notification.');
+			})
 				.then(function(result) {
+					if (!result) return;
 					var ok = result && (result.ok === true || result.ok === 1);
+					var failures = {
+						channel_unknown: _('Channel not found. Save & Apply before testing.'),
+						delivery_failed: _('Delivery failed. Check the provider URL, credentials and network connectivity.')
+					};
+					var message = result && result.message;
 					ui.addNotification(null, E('p', {}, ok
 						? _('Test notification delivered.')
-						: _('Test failed: ') + (result && result.message || _('Unknown error'))),
+						: _('Test failed: ') + (failures[message] || message || _('Unknown error'))),
 						ok ? 'info' : 'danger');
 				})
 				.catch(function(err) {

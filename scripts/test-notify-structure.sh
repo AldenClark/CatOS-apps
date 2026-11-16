@@ -15,6 +15,38 @@ for file in "$ui_dir"/*.js; do
 	node --check "$file"
 done
 
+# Exercise the actual shell helper used by test sends, event rules and device
+# probes. LuCI omits a Flag when it equals its default unless rmempty=false.
+check_section_flag() {
+	local implementation
+	implementation="$(sed -n '/^section_flag() {/,/^}/p' "$1")"
+	[ -n "$implementation" ] || { echo "Missing section_flag in $1" >&2; return 1; }
+	(
+		eval "$implementation"
+		field() { printf '%s' "$MOCK_FLAG"; }
+		MOCK_FLAG=''
+		section_flag sample enabled 1
+		! section_flag sample enabled 0
+		MOCK_FLAG=1
+		section_flag sample enabled 1
+		MOCK_FLAG=0
+		! section_flag sample enabled 1
+		MOCK_FLAG=invalid
+		! section_flag sample enabled 1
+	)
+}
+check_section_flag "$core/catos-notify-dispatch"
+check_section_flag "$core/catos-notify-monitor"
+
+# Manual test must not depend on a channel's enabled flag (nor the global
+# service flag). Both remain enforced on normal event/message routing.
+test_handler="$(sed -n '/^do_test() {/,/^}/p' "$core/catos-notify-dispatch")"
+[ -n "$test_handler" ] || { echo 'Missing manual test handler' >&2; exit 1; }
+if printf '%s' "$test_handler" | grep -Eq 'section_flag|setting enabled'; then
+	echo 'Manual test must work on disabled channels' >&2
+	exit 1
+fi
+
 node - "$core/catos_notify.config" "$ui_dir/rules.js" "$ui_dir/channels.js" "$core/catos-notify-providers" <<'NODE'
 const fs = require('fs');
 const assert = require('assert');
@@ -48,6 +80,13 @@ for (const p of providers) {
 assert(config.includes("option receiver_enabled '0'"), 'Receiver must default off');
 assert(config.includes("option receiver_scope 'lan'"), 'Receiver must default to LAN');
 assert(config.includes("option receiver_auth '1'"), 'Receiver auth must default on');
+const uiDevices = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/devices.js', 'utf8');
+for (const [script, name] of [[uiChannels, 'enabled'], [uiRules, 'enabled'], [uiDevices, 'monitor']]) {
+  assert(new RegExp("option\\(form\\.Flag, '" + name + "'[\\s\\S]{0,140}?o\\.default = '1';\\s*o\\.rmempty = false;").test(script),
+    `Default-on ${name} checkbox must persist its explicit value`);
+}
+assert(uiChannels.includes("o.modalonly = false;"), 'Channel test must be outside the edit dialog');
+assert(uiChannels.includes('uci.changes().then('), 'Channel test must reject un-applied UCI changes');
 console.log('CatOS Notify: 20 events, 8 providers, secure defaults and shell/JS syntax verified.');
 NODE
 

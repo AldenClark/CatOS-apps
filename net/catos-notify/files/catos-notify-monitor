@@ -25,6 +25,13 @@ field() {
 	uci -q get "catos_notify.$1.$2" 2>/dev/null || true
 }
 
+# A missing device monitor flag represents the LuCI default (enabled).
+section_flag() {
+	local value
+	value="$(field "$1" "$2")"
+	[ "${value:-$3}" = 1 ]
+}
+
 json_value() {
 	printf '%s' "$1" | jsonfilter -e "$2" 2>/dev/null | head -n 1
 }
@@ -187,7 +194,7 @@ unknown_devices_poll() {
 
 probe_device() {
 	local section="$1" addr mac name key status last pending count
-	[ "$(field "$section" monitor)" = 1 ] || return
+	section_flag "$section" monitor 1 || return
 	addr="$(field "$section" ip)"
 	mac="$(field "$section" mac)"
 	name="$(field "$section" name)"

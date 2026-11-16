@@ -34,6 +34,9 @@ msgstr "通知渠道"
 msgid "Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups."
 msgstr "通知渠道是消息的送达目标。为每个服务商账户或设备创建渠道，再将渠道分配到投递分组。"
 
+msgid "Channel not found. Save & Apply before testing."
+msgstr "未找到该通知渠道，请先保存并应用配置，再发送测试。"
+
 msgid "Check public IPv4/IPv6"
 msgstr "检测公网 IPv4/IPv6 地址"
 
@@ -75,6 +78,9 @@ msgstr "自定义请求头内容"
 
 msgid "Delivery group"
 msgstr "投递分组"
+
+msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
+msgstr "投递失败，请检查服务商地址、凭据以及网络连接。"
 
 msgid "Detect unknown LAN devices"
 msgstr "发现未知局域网设备"

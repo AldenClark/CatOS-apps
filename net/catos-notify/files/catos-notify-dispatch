@@ -22,6 +22,14 @@ field() {
 	uci -q get "$CONFIG.$1.$2" 2>/dev/null || true
 }
 
+# LuCI Flag options omit values equal to their default. Channel and rule
+# switches default to enabled, so an absent option is not a disabled switch.
+section_flag() {
+	local value
+	value="$(field "$1" "$2")"
+	[ "${value:-$3}" = 1 ]
+}
+
 init_run() {
 	mkdir -p "$RUN/queue" "$RUN/state" || return 1
 	chmod 0700 "$RUN" "$RUN/queue" "$RUN/state"
@@ -136,9 +144,8 @@ SEVERITY=
 EVENT=
 
 queue_channel() {
-	local section="$1" enabled group
-	enabled="$(field "$section" enabled)"
-	[ "$enabled" = 1 ] || return 0
+	local section="$1" group
+	section_flag "$section" enabled 1 || return 0
 	if [ -n "$TARGET" ]; then
 		[ "$TARGET" = "$section" ] || return 0
 	else
@@ -202,9 +209,8 @@ send_message() {
 }
 
 rule_route() {
-	local section="$1" enabled match rule_group template cooldown last now filter override
-	enabled="$(field "$section" enabled)"
-	[ "$enabled" = 1 ] || return
+	local section="$1" match rule_group template cooldown last now filter override
+	section_flag "$section" enabled 1 || return
 	match="$(field "$section" event)"
 	[ "$match" = "$EVENT" ] || return
 	filter="$(field "$section" interface)"
@@ -272,8 +278,9 @@ do_test() {
 	json_get_var title title
 	json_get_var body body
 	[ -n "$channel" ] || { json_reply 0 missing_channel; return 1; }
-	[ "$(field "$channel" enabled)" = 1 ] || { json_reply 0 channel_disabled; return 1; }
-	[ "$(field "$channel" type)" ] || { json_reply 0 channel_unknown; return 1; }
+	[ -n "$(field "$channel" type)" ] || { json_reply 0 channel_unknown; return 1; }
+	# A manual test exercises the saved provider credentials even when the
+	# channel is disabled for scheduled/event-driven deliveries.
 	title="${title:-CatOS Notify test}"
 	body="${body:-This is a notification delivery test.}"
 	json_init

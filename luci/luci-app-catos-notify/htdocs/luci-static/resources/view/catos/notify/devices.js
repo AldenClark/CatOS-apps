@@ -13,6 +13,7 @@ return view.extend({
 
 		var o = s.option(form.Flag, 'monitor', _('Monitor'));
 		o.default = '1';
+		o.rmempty = false;
 		o = s.option(form.Value, 'name', _('Device name'));
 		o.rmempty = false;
 		o = s.option(form.Value, 'mac', _('MAC address'));

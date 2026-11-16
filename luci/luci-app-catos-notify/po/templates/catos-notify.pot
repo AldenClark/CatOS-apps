@@ -27,6 +27,9 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
+msgid "Channel not found. Save & Apply before testing."
+msgstr ""
+
 msgid "Channels"
 msgstr ""
 
@@ -73,6 +76,9 @@ msgid "Custom header value"
 msgstr ""
 
 msgid "Delivered"
+msgstr ""
+
+msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
 msgstr ""
 
 msgid "Delivery group"
