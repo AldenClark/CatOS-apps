@@ -12,11 +12,24 @@ CatOS Apps 提供适用于 OpenWrt 的 APK 签名软件源，包含核心应用�
 
 二进制软件源要求使用 APK 包管理器。采用 `opkg` 的 OpenWrt 24.10 可通过[源码 Feed](../README.zh-CN.md#添加源码-feed) 自行编译。
 
-**开发状态：** 当前软件包仅提供配置及 LuCI 页面框架，尚未实现通知投递、动态 DNS 更新及 ACME 证书签发功能，不建议用于生产系统。
+**开发状态：** CatOS Notify 已有初步功能实现，尚待 SDK 构建与实际设备验证。CatOS DDNS 和 CatOS ACME 仍为软件包骨架。当前软件包暂不适用于生产环境。
 
-下列下载地址将在首次成功发布至 GitHub Pages 后生效。
+下载地址通过 **Publish signed APK feed** 工作流部署。
 
 ## 在 OpenWrt 上安装软件源
+
+SSH 登录支持的 OpenWrt 设备，以 root 身份执行：
+
+```sh
+wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
+apk add luci-app-catos-notify
+```
+
+该脚本会安装签名公钥、匹配的软件源索引，并执行 `apk update`；可重复运行，**不会自动安装软件包**。运行前可以先检查脚本源码：[feed.sh](../feed.sh)。脚本会拒绝不支持的系统版本、架构，以及意外更换的签名公钥。
+
+### 手动配置
+
+也可以不使用脚本，手动配置：
 
 1. 确认设备的 OpenWrt 版本与架构：
 
@@ -29,7 +42,7 @@ CatOS Apps 提供适用于 OpenWrt 的 APK 签名软件源，包含核心应用�
 2. 下载用于校验软件源索引的公钥：
 
    ```sh
-   mkdir -p /etc/apk/keys
+   mkdir -p /etc/apk/keys /etc/apk/repositories.d
    wget -O /etc/apk/keys/catos-apk.pem \
      https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
    ```

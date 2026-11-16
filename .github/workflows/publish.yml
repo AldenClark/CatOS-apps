@@ -117,6 +117,7 @@ jobs:
             exit 1
           fi
           cp site/index.html site-dist/index.html
+          cp feed.sh site-dist/feed.sh
 
           echo 'Published public-key fingerprint (DER SHA-256):'
           openssl pkey -pubin -in site-dist/keys/catos-apk.pem -outform DER | sha256sum

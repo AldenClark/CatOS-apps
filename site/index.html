@@ -16,6 +16,11 @@
       <h1>CatOS Apps</h1>
       <p>Signed APK package repositories for CatOS applications on OpenWrt.</p>
       <p>Supported release: OpenWrt 25.12.6. Supported package architectures: x86_64, aarch64_generic, mips_24kc.</p>
+      <h2>Quick setup</h2>
+      <p>Connect to your OpenWrt device over SSH and run:</p>
+      <pre><code>wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh &amp;&amp; ash /tmp/catos-feed.sh
+apk add luci-app-catos-notify</code></pre>
+      <p>The script adds the signed APK repository and its public key; it does not install application packages. Run it only on a supported release and architecture.</p>
       <p>Download the <a href="keys/catos-apk.pem">APK repository public key</a> and select the repository index matching your system:</p>
       <ul>
         <li><a href="releases/25.12.6/x86_64/packages.adb">OpenWrt 25.12.6 · x86_64</a></li>
@@ -23,7 +28,7 @@
         <li><a href="releases/25.12.6/mips_24kc/packages.adb">OpenWrt 25.12.6 · mips_24kc</a></li>
       </ul>
       <p>See the <a href="https://github.com/AldenClark/CatOS-apps/blob/main/docs/binary-feed.md">installation guide</a> and <a href="https://github.com/AldenClark/CatOS-apps">source repository</a>.</p>
-      <p><strong>Development status:</strong> The current packages provide initial configuration and LuCI pages. Service functionality is under development and is not ready for production deployment.</p>
+      <p><strong>Development status:</strong> CatOS Notify has an initial implementation awaiting validation on supported devices. CatOS DDNS and CatOS ACME remain early package skeletons. These packages are not yet production-ready.</p>
     </main>
   </body>
 </html>
