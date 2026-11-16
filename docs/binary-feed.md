@@ -6,13 +6,16 @@ CatOS Apps provides a signed APK package repository for compatible OpenWrt syste
 
 ## Compatibility
 
-The **universal feed** contains only packages declared with architecture `all` and targets compatible OpenWrt-based systems using APK v3. Branded firmware version numbers do not affect feed selection. Package dependencies must still be available from the device's own compatible repositories.
+The packages are built **separately** against two OpenWrt userspace branches:
 
-The following release-specific feed snapshots remain available:
+| OpenWrt userspace | Signed APK feed | SDK build |
+| --- | --- | --- |
+| 25.12 series | [`feeds/openwrt-25.12/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) | OpenWrt 25.12 SDK |
+| SNAPSHOT | [`feeds/SNAPSHOT/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) | OpenWrt Snapshot SDK |
 
-| OpenWrt release | APK architectures |
-| --- | --- |
-| 25.12.6 | `x86_64`, `aarch64_generic`, `mips_24kc` |
+Currently, all six packages contain only scripts and resources and are declared `PKGARCH=all`, so **each branch supports multiple CPU architectures without duplicate builds**. Architecture independence does **not** imply ABI or runtime dependency compatibility between 25.12 and SNAPSHOT; therefore, the two signed feeds are never combined.
+
+The installation script detects the branch from `/etc/apk/repositories.d/distfeeds.list`, not from the firmware's custom `DISTRIB_RELEASE`, `DISTRIB_ARCH`, `apk --print-arch`, or kernel version. For example, a custom firmware reporting `0.8.5-beta` but using `/snapshots/packages/aarch64_cortex-a53/base/packages.adb` selects the SNAPSHOT feed. Its dependencies still need to be resolvable from its existing base repositories.
 
 The binary repository requires APK v3. OpenWrt devices using `opkg` should use the [source feed](../README.md#add-the-source-feed) to build packages instead.
 
@@ -29,17 +32,26 @@ wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && as
 apk add luci-app-catos-notify
 ```
 
-The script configures the signing key, selects the universal signed index, and runs `apk update`. It is safe to run again and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). It requires APK v3 and rejects unexpected signing-key changes.
+The script configures the signing key, selects the appropriate branch-specific signed index, and runs `apk update`. It is safe to run repeatedly and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). It requires APK v3, refuses unexpected signing-key changes, and rolls back newly made configuration changes when `apk update` fails.
+
+If the firmware has no recognizable base feed URL, you can explicitly select a branch **only after confirming its ABI compatibility**:
+
+```sh
+ash /tmp/catos-feed.sh --channel SNAPSHOT
+# or: ash /tmp/catos-feed.sh --channel openwrt-25.12
+```
+
+An explicit channel cannot override a conflicting, recognized base feed.
 
 ### Manual setup
 
 You can also configure the repository without the setup script:
 
-1. Confirm the package manager and architecture:
+1. Confirm the APK version and existing base repositories:
 
    ```sh
    apk --version
-   apk --print-arch
+   cat /etc/apk/repositories.d/distfeeds.list
    ```
 
 2. Download the public signing key:
@@ -50,14 +62,16 @@ You can also configure the repository without the setup script:
      https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
    ```
 
-3. Add the universal signed index:
+3. Add **one** signed index matching the userspace branch (SNAPSHOT shown):
 
    ```sh
-   repo="https://aldenclark.github.io/CatOS-apps/universal/packages.adb"
+   repo="https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb"
    grep -qxF "$repo" /etc/apk/repositories.d/customfeeds.list 2>/dev/null || \
      printf '%s\n' "$repo" >> /etc/apk/repositories.d/customfeeds.list
    apk update
    ```
+
+   For OpenWrt 25.12, use `https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb` instead.
 
 4. Install packages as needed, for example:
 
@@ -67,7 +81,7 @@ You can also configure the repository without the setup script:
 
 The core packages (`catos-notify`, `catos-ddns`, `catos-acme`) can also be installed without their LuCI interfaces.
 
-If the index is unavailable, confirm that the latest universal feed was published to GitHub Pages. A successful `apk update` must verify the repository signature against the installed public key. Universal package architecture does not waive runtime dependency compatibility.
+If the index is unavailable, check that **both channel builds** were deployed successfully to GitHub Pages. `apk update` must verify the signed index with the installed public key; never use `--allow-untrusted` to bypass signature or dependency errors. OpenWrt SNAPSHOT can change userspace library ABI over time, so an older custom firmware may require its own matching build. Do not run a blanket `apk upgrade` on OpenWrt.
 
 ## Maintainer: signing key setup
 
@@ -85,14 +99,14 @@ gh secret set CATOS_APK_PRIVATE_KEY \
   < ../catos-apk-signing/catos-apk-private.pem
 ```
 
-Never commit, attach, print, or distribute the private key. The publishing workflow derives `keys/catos-apk.pem` from the secret and serves the public key with the signed package indexes. Do not regenerate the signing key during normal releases: installed devices trust the existing public key. Key rotation requires a separately planned user migration.
+Never commit, attach, print, or distribute the private key. The publishing workflow derives `keys/catos-apk.pem` from the secret and serves the public key with the signed package indexes. Do not regenerate the signing key during normal releases: installed devices trust the existing public key.
 
 ## Maintainer: release publication
 
 1. In repository **Settings → Pages**, choose **GitHub Actions** as the publishing source.
 2. Confirm that the `CATOS_APK_PRIVATE_KEY` Actions secret is configured.
-3. In **Actions → Publish signed APK feed → Run workflow**, select the supported OpenWrt version and run the workflow from the `main` branch.
-4. Verify that every architecture build and the GitHub Pages deployment succeeded. The workflow checks that all six CatOS packages were produced and rejects unexpected packages before uploading the feed.
-5. Verify the public landing page at [CatOS APK repository](https://aldenclark.github.io/CatOS-apps/) and test `apk update` on a supported device.
+3. In **Actions → Publish signed APK feed → Run workflow**, run the workflow from the `main` branch. It builds **both** the 25.12 and SNAPSHOT channels; there is no single-channel deployment.
+4. Verify that both SDK builds and the GitHub Pages deployment succeeded. The workflow requires exactly six CatOS APKs per channel and rejects unrelated packages. It also requires all current packages to remain architecture-independent.
+5. Verify the [public landing page](https://aldenclark.github.io/CatOS-apps/), both signed APK indexes, and `apk update` on a suitable device. In particular, validate that the device's current base repositories can satisfy the generated dependencies.
 
-Publishing is manual. Successful runs replace the published snapshot for the supported release and architecture set. Expand the workflow and its retention strategy before introducing additional OpenWrt release lines. The GitHub Pages content is a binary package repository; the repository's Git source feed remains available independently.
+Publishing is manual. Every successful deployment contains **both** channel feeds; a SNAPSHOT refresh must not remove 25.12 packages. If native binaries are added later, introduce separate CPU architecture builds and indexes. The repository's Git source feed remains available independently.
