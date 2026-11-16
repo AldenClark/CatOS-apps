@@ -10,6 +10,13 @@ artifacts/
 *.apk
 *.adb
 
+# Local signing material: never commit private keys or token files
+catos-apk-private.pem
+*.private.pem
+*.key
+signing-keys/
+secrets/
+
 # Editor and operating-system files
 .DS_Store
 *.swp

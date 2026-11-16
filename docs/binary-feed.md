@@ -1,0 +1,84 @@
+# Signed APK binary repository
+
+[简体中文](binary-feed.zh-CN.md)
+
+CatOS Apps provides a signed APK package repository for compatible OpenWrt systems. The repository contains the application packages and their LuCI interfaces; dependencies supplied by OpenWrt are resolved from the official OpenWrt repositories.
+
+## Supported targets
+
+| OpenWrt release | APK architectures |
+| --- | --- |
+| 25.12.6 | `x86_64`, `aarch64_generic`, `mips_24kc` |
+
+The binary repository requires OpenWrt's APK package manager. OpenWrt 24.10 devices using `opkg` should use the [source feed](../README.md#add-the-source-feed) to build packages instead.
+
+**Development status:** The packages currently contain configuration and LuCI frameworks. Notification delivery, dynamic DNS updates, and ACME certificate issuance are not yet available. These packages should not be deployed on production systems.
+
+The download URLs below become available after the first successful GitHub Pages publication.
+
+## Install the repository on OpenWrt
+
+1. Confirm that the device runs a supported OpenWrt release and package architecture:
+
+   ```sh
+   . /etc/openwrt_release
+   echo "$DISTRIB_RELEASE"
+   apk --print-arch
+   ```
+
+2. Download the public signing key:
+
+   ```sh
+   mkdir -p /etc/apk/keys
+   wget -O /etc/apk/keys/catos-apk.pem \
+     https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
+   ```
+
+3. Add the signed index that matches the device release and architecture:
+
+   ```sh
+   . /etc/openwrt_release
+   arch="$(apk --print-arch)"
+   repo="https://aldenclark.github.io/CatOS-apps/releases/${DISTRIB_RELEASE}/${arch}/packages.adb"
+   grep -qxF "$repo" /etc/apk/repositories.d/customfeeds.list 2>/dev/null || \
+     printf '%s\n' "$repo" >> /etc/apk/repositories.d/customfeeds.list
+   apk update
+   ```
+
+4. Install packages as needed, for example:
+
+   ```sh
+   apk add luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+   ```
+
+The core packages (`catos-notify`, `catos-ddns`, `catos-acme`) can also be installed without their LuCI interfaces.
+
+If the index is unavailable, confirm that a binary release has been published for the exact OpenWrt release and APK architecture. A successful `apk update` must verify the repository signature against the installed public key.
+
+## Maintainer: signing key setup
+
+APK repository indexes are signed with a **persistent P-256 (prime256v1) EC key**. Generate the key once, on a trusted workstation, outside the Git checkout:
+
+```sh
+bash scripts/generate-apk-key.sh ../catos-apk-signing
+```
+
+Back up `../catos-apk-signing/catos-apk-private.pem` in a secured location. Configure the repository's GitHub Actions secret named `CATOS_APK_PRIVATE_KEY` with the **complete PEM contents** of this private key. With GitHub CLI, an authenticated repository maintainer can use:
+
+```sh
+gh secret set CATOS_APK_PRIVATE_KEY \
+  --repo AldenClark/CatOS-apps \
+  < ../catos-apk-signing/catos-apk-private.pem
+```
+
+Never commit, attach, print, or distribute the private key. The publishing workflow derives `keys/catos-apk.pem` from the secret and serves the public key with the signed package indexes. Do not regenerate the signing key during normal releases: installed devices trust the existing public key. Key rotation requires a separately planned user migration.
+
+## Maintainer: release publication
+
+1. In repository **Settings → Pages**, choose **GitHub Actions** as the publishing source.
+2. Confirm that the `CATOS_APK_PRIVATE_KEY` Actions secret is configured.
+3. In **Actions → Publish signed APK feed → Run workflow**, select the supported OpenWrt version and run the workflow from the `main` branch.
+4. Verify that every architecture build and the GitHub Pages deployment succeeded. The workflow checks that all six CatOS packages were produced and rejects unexpected packages before uploading the feed.
+5. Verify the public landing page at [CatOS APK repository](https://aldenclark.github.io/CatOS-apps/) and test `apk update` on a supported device.
+
+Publishing is manual. Successful runs replace the published snapshot for the supported release and architecture set. Expand the workflow and its retention strategy before introducing additional OpenWrt release lines. The GitHub Pages content is a binary package repository; the repository's Git source feed remains available independently.

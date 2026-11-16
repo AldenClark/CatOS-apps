@@ -1,0 +1,134 @@
+name: Publish signed APK feed
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_version:
+        description: OpenWrt release for the binary repository
+        required: true
+        type: choice
+        options:
+          - '25.12.6'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: catos-apk-feed
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.architecture }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        architecture:
+          - x86_64
+          - aarch64_generic
+          - mips_24kc
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Prepare SDK output directory
+        run: mkdir -p artifacts
+
+      - name: Require the persistent signing key
+        env:
+          CATOS_APK_PRIVATE_KEY: ${{ secrets.CATOS_APK_PRIVATE_KEY }}
+        run: |
+          if [[ -z "$CATOS_APK_PRIVATE_KEY" ]]; then
+            echo 'CATOS_APK_PRIVATE_KEY is missing. Configure the Actions secret before publishing.' >&2
+            exit 1
+          fi
+          printf '%s\n' "$CATOS_APK_PRIVATE_KEY" | openssl pkey -pubout -out "$RUNNER_TEMP/catos-apk.pem"
+          if ! openssl pkey -pubin -in "$RUNNER_TEMP/catos-apk.pem" -text -noout | grep -q 'prime256v1'; then
+            echo 'The APK signing key must use the P-256 (prime256v1) curve.' >&2
+            exit 1
+          fi
+
+      - name: Build and sign CatOS feed with OpenWrt SDK
+        uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
+        env:
+          ARCH: ${{ matrix.architecture }}-${{ inputs.openwrt_version }}
+          FEEDNAME: catos
+          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+          INDEX: '1'
+          PRIVATE_KEY: ${{ secrets.CATOS_APK_PRIVATE_KEY }}
+          ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+
+      - name: Collect signed package index and CatOS APKs
+        run: |
+          bash scripts/assemble-apk-feed.sh \
+            artifacts/bin/packages \
+            site-dist \
+            '${{ inputs.openwrt_version }}' \
+            '${{ matrix.architecture }}'
+
+      - name: Upload architecture feed
+        uses: actions/upload-artifact@v4
+        with:
+          name: catos-apk-${{ inputs.openwrt_version }}-${{ matrix.architecture }}
+          path: site-dist/
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Deploy signed feed to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Download all architecture feeds
+        uses: actions/download-artifact@v4
+        with:
+          pattern: catos-apk-${{ inputs.openwrt_version }}-*
+          path: site-dist/
+          merge-multiple: true
+
+      - name: Verify assembled feeds and publish the public key
+        env:
+          CATOS_APK_PRIVATE_KEY: ${{ secrets.CATOS_APK_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          for arch in x86_64 aarch64_generic mips_24kc; do
+            feed_dir="site-dist/releases/${{ inputs.openwrt_version }}/$arch"
+            test -s "$feed_dir/packages.adb"
+            (cd "$feed_dir" && sha256sum --check SHA256SUMS)
+          done
+
+          mkdir -p site-dist/keys
+          printf '%s\n' "$CATOS_APK_PRIVATE_KEY" | openssl pkey -pubout -out site-dist/keys/catos-apk.pem
+          if ! openssl pkey -pubin -in site-dist/keys/catos-apk.pem -text -noout | grep -q 'prime256v1'; then
+            echo 'Invalid APK signing key curve.' >&2
+            exit 1
+          fi
+          cp site/index.html site-dist/index.html
+
+          echo 'Published public-key fingerprint (DER SHA-256):'
+          openssl pkey -pubin -in site-dist/keys/catos-apk.pem -outform DER | sha256sum
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages content
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist/
+
+      - name: Deploy GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

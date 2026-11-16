@@ -38,7 +38,15 @@ src-git catos https://github.com/AldenClark/CatOS-apps.git
 make package/feeds/catos/catos-notify/compile V=s
 ```
 
-请使用与目标 OpenWrt 版本及架构匹配的 SDK。OpenWrt 24.10 生成 `.ipk` 软件包，OpenWrt 25.12 及更新版本使用 `.apk`。本仓库是**源码 Feed**，不是可直接添加到设备上的二进制软件源。
+请使用与目标 OpenWrt 版本及架构匹配的 SDK。OpenWrt 24.10 生成 `.ipk` 软件包，OpenWrt 25.12 及更新版本使用 `.apk`。
+
+## 已签名 APK 二进制软件源
+
+本仓库包含面向 OpenWrt 25.12.6 的 APK 软件源构建、签名及发布工作流。首次成功发布后，用户可下载[软件源公钥](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem)，并在 OpenWrt 的 APK 配置中添加与系统版本及架构对应的 `packages.adb` 地址。
+
+目前发布配置包含 `x86_64`、`aarch64_generic` 和 `mips_24kc` 三种架构。二进制软件源不适用于使用 `opkg` 的 OpenWrt 24.10。
+
+参见[APK 软件源安装与发布说明](docs/binary-feed.zh-CN.md)。公开下载地址将在 **Publish signed APK feed** 工作流首次成功部署后生效。
 
 ## 仓库结构
 
@@ -46,7 +54,8 @@ make package/feeds/catos/catos-notify/compile V=s
 net/                 核心 OpenWrt 软件包定义
 luci/                LuCI 应用软件包
 scripts/             仓库检查工具
-.github/workflows/   静态检查与手动 SDK 构建
+site/                二进制软件源静态页面
+.github/workflows/   静态检查、SDK 构建与已签名 APK 发布
 ```
 
 三个应用分别维护软件包和配置命名空间。跨应用调用接口将在功能实现过程中逐步提供。

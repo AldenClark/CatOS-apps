@@ -38,7 +38,15 @@ Select the desired packages with `make menuconfig`, or build an individual packa
 make package/feeds/catos/catos-notify/compile V=s
 ```
 
-Use an SDK matching the target OpenWrt release and architecture. OpenWrt 24.10 produces `.ipk` packages, while OpenWrt 25.12 and later use `.apk` packages. The source feed is not a device-side binary package repository.
+Use an SDK matching the target OpenWrt release and architecture. OpenWrt 24.10 produces `.ipk` packages, while OpenWrt 25.12 and later use `.apk` packages.
+
+## Signed APK binary feed
+
+The repository includes an independently signed binary feed publishing workflow for OpenWrt 25.12.6. Once its first release has been published, users can install the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem) and add the matching `packages.adb` URL to their OpenWrt APK repositories.
+
+Supported publishing targets are `x86_64`, `aarch64_generic`, and `mips_24kc`. The binary feed is not compatible with OpenWrt 24.10's `opkg` package manager.
+
+See the [binary feed installation and publishing guide](docs/binary-feed.md). Repository URLs become available after the first successful **Publish signed APK feed** workflow deployment.
 
 ## Repository layout
 
@@ -46,7 +54,8 @@ Use an SDK matching the target OpenWrt release and architecture. OpenWrt 24.10 p
 net/                 Core OpenWrt package definitions
 luci/                LuCI application packages
 scripts/             Repository validation tools
-.github/workflows/   Validation and manual SDK builds
+site/                Static binary feed landing page
+.github/workflows/   Validation, SDK builds, and signed APK publication
 ```
 
 The three services have separate packages and configuration namespaces. Cross-service interfaces will be introduced as the implementations mature.

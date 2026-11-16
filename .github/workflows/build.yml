@@ -32,8 +32,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Prepare SDK output directory
+        run: mkdir -p artifacts
+
       - name: Build all CatOS packages with OpenWrt SDK
-        uses: openwrt/gh-action-sdk@main
+        uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
         env:
           ARCH: ${{ inputs.architecture }}-${{ inputs.openwrt_version }}
           FEEDNAME: catos

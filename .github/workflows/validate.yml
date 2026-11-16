@@ -17,4 +17,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate package layout and LuCI files
-        run: bash scripts/check-feed.sh
+        run: |
+          bash scripts/check-feed.sh
+          bash scripts/test-assemble-apk-feed.sh

@@ -18,9 +18,16 @@ Run the repository checks before submitting a change:
 
 ```sh
 bash scripts/check-feed.sh
+bash scripts/test-assemble-apk-feed.sh
 ```
 
 For integration validation, add the repository as a source feed to a matching OpenWrt SDK and compile each affected package. The manually triggered **Build packages** workflow offers an additional SDK build path.
+
+## Binary releases
+
+The manually triggered **Publish signed APK feed** workflow builds and signs the OpenWrt APK repository and deploys it to GitHub Pages. Release builds use a persistent P-256 signing key stored as an Actions secret. See [docs/binary-feed.md](docs/binary-feed.md) for the release procedure.
+
+Do not upload private signing keys to source control, build artifacts, issues, or pull requests. Release signing keys must remain stable across publications; planned key rotations require a documented transition for users.
 
 ## Pull requests
 
