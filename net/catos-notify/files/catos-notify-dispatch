@@ -1,0 +1,391 @@
+#!/bin/sh
+umask 077
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+. /usr/share/libubox/jshn.sh
+
+RUN=${CATOS_NOTIFY_RUN:-/tmp/catos-notify}
+CONFIG=catos_notify
+MAX_INPUT=16384
+
+setting() {
+	local result
+	result="$(uci -q get "$CONFIG.main.$1" 2>/dev/null)" || result="$2"
+	printf '%s' "$result"
+}
+
+sections() {
+	uci -q show "$CONFIG" 2>/dev/null |
+		sed -n "s/^$CONFIG\.\([^=]*\)=$1$/\1/p"
+}
+
+field() {
+	uci -q get "$CONFIG.$1.$2" 2>/dev/null || true
+}
+
+init_run() {
+	mkdir -p "$RUN/queue" "$RUN/state" || return 1
+	chmod 0700 "$RUN" "$RUN/queue" "$RUN/state"
+}
+
+number_or() {
+	case "$1" in
+		''|*[!0-9]*) printf '%s' "$2" ;;
+		*) printf '%s' "$1" ;;
+	esac
+}
+
+json_reply() {
+	json_init
+	json_add_boolean ok "$1"
+	json_add_string message "$2"
+	json_dump
+}
+
+valid_json() {
+	[ "${#1}" -le "$MAX_INPUT" ] && json_load "$1"
+}
+
+read_input() {
+	INPUT="$(head -c "$((MAX_INPUT + 1))")"
+	[ "${#INPUT}" -le "$MAX_INPUT" ] && valid_json "$INPUT"
+}
+
+clean_line() {
+	printf '%s' "$1" | tr '\r\n\t|' '    ' | cut -c 1-180
+}
+
+history() {
+	local line
+	line="$(date +%s)|$(clean_line "$1")|$(clean_line "$2")|$(clean_line "$3")"
+	printf '%s\n' "$line" >> "$RUN/history"
+	if [ "$(wc -l < "$RUN/history")" -gt 150 ]; then
+		tail -n 100 "$RUN/history" > "$RUN/history.new"
+		mv -f "$RUN/history.new" "$RUN/history"
+	fi
+}
+
+replace_variable() {
+	# Literal {{token}} replacement, no regular expressions or evaluation.
+	CATOS_KEY="$2" CATOS_VALUE="$3" awk '
+		{ s = $0; marker = "{{" ENVIRON["CATOS_KEY"] "}}";
+		  v = ENVIRON["CATOS_VALUE"]; out = "";
+		  while ((p = index(s, marker)) > 0) {
+		    out = out substr(s, 1, p - 1) v;
+		    s = substr(s, p + length(marker));
+		  }
+		  print out s;
+		}' <<-EOF
+	$1
+	EOF
+}
+
+render_template() {
+	local result="$1" key value keys object
+	local original="$INPUT"
+	result="$(replace_variable "$result" router "$(setting router_name OpenWrt)")"
+	result="$(replace_variable "$result" time "$(date '+%Y-%m-%d %H:%M:%S %z')")"
+	for key in event source severity title body interface device old new; do
+		json_load "$original" >/dev/null 2>&1 || break
+		json_get_var value "$key"
+		result="$(replace_variable "$result" "$key" "$value")"
+	done
+	for object in data variables; do
+		json_load "$original" >/dev/null 2>&1 || continue
+		if json_select "$object" 2>/dev/null; then
+			json_get_keys keys
+			for key in $keys; do
+				case "$key" in *[!a-zA-Z0-9_]*|'') continue ;; esac
+				json_get_var value "$key"
+				result="$(replace_variable "$result" "$key" "$value")"
+			done
+			json_select ..
+		fi
+	done
+	printf '%s' "$result"
+}
+
+queue_target() {
+	local channel="$1" title="$2" body="$3" severity="$4" event="$5"
+	local tmp count limit payload
+	init_run || return 1
+	limit="$(number_or "$(setting queue_limit 64)" 64)"
+	[ "$limit" -ge 1 ] && [ "$limit" -le 512 ] || limit=64
+	set -- "$RUN"/queue/*.json
+	if [ -f "$1" ]; then
+		count=$#
+		[ "$count" -lt "$limit" ] || return 1
+	fi
+	json_init
+	json_add_string channel "$channel"
+	json_add_string title "$title"
+	json_add_string body "$body"
+	json_add_string severity "$severity"
+	json_add_string event "$event"
+	payload="$(json_dump)"
+	tmp="$(mktemp "$RUN/queue/message.XXXXXXXX")" || return 1
+	printf '%s\n' "$payload" > "$tmp"
+	mv -f "$tmp" "$tmp.json"
+}
+
+DELIVERY_COUNT=0
+GROUP=
+TARGET=
+TITLE=
+BODY=
+SEVERITY=
+EVENT=
+
+queue_channel() {
+	local section="$1" enabled group
+	enabled="$(field "$section" enabled)"
+	[ "$enabled" = 1 ] || return 0
+	if [ -n "$TARGET" ]; then
+		[ "$TARGET" = "$section" ] || return 0
+	else
+		group="$(field "$section" group)"
+		[ "${group:-default}" = "$GROUP" ] || return 0
+	fi
+	if queue_target "$section" "$TITLE" "$BODY" "$SEVERITY" "$EVENT"; then
+		DELIVERY_COUNT=$((DELIVERY_COUNT + 1))
+	else
+		history "$section" queue_full "$EVENT"
+	fi
+}
+
+route_channels() {
+	local section
+	DELIVERY_COUNT=0
+	for section in $(sections channel); do queue_channel "$section"; done
+}
+
+message_fields() {
+	local tmpl
+	json_get_var TITLE title
+	json_get_var BODY body
+	json_get_var SEVERITY severity
+	json_get_var GROUP group
+	json_get_var TARGET channel
+	json_get_var tmpl template
+	SEVERITY="${SEVERITY:-normal}"
+	GROUP="${GROUP:-default}"
+	case "$SEVERITY" in normal|low|high|critical) ;; *) SEVERITY=normal ;; esac
+	if [ -n "$tmpl" ]; then
+		local template_title template_body
+		template_title="$(field "$tmpl" title)"
+		template_body="$(field "$tmpl" body)"
+		[ -n "$template_title$template_body" ] || return 1
+		TITLE="$(render_template "$template_title")"
+		BODY="$(render_template "$template_body")"
+	fi
+	[ -n "$TITLE$BODY" ] && [ "${#TITLE}" -le 512 ] &&
+		[ "${#BODY}" -le 8192 ] && [ "${#GROUP}" -le 80 ]
+}
+
+send_message() {
+	local count
+	[ "$(setting enabled 0)" = 1 ] || { json_reply 0 disabled; return 1; }
+	read_input || { json_reply 0 invalid_json; return 1; }
+	EVENT=message
+	message_fields || { json_reply 0 invalid_message; return 1; }
+	route_channels
+	count="$DELIVERY_COUNT"
+	json_init
+	if [ "$count" -gt 0 ]; then
+		json_add_boolean ok 1
+	else
+		json_add_boolean ok 0
+		json_add_string message no_matching_channel_or_queue_full
+	fi
+	json_add_int queued "$count"
+	json_dump
+	[ "$count" -gt 0 ]
+}
+
+rule_route() {
+	local section="$1" enabled match rule_group template cooldown last now filter override
+	enabled="$(field "$section" enabled)"
+	[ "$enabled" = 1 ] || return
+	match="$(field "$section" event)"
+	[ "$match" = "$EVENT" ] || return
+	filter="$(field "$section" interface)"
+	[ -z "$filter" ] || [ "$filter" = "$INTERFACE" ] || return
+	filter="$(field "$section" source)"
+	[ -z "$filter" ] || [ "$filter" = "$SOURCE" ] || return
+	filter="$(field "$section" device)"
+	[ -z "$filter" ] || [ "$filter" = "$DEVICE" ] || return
+	cooldown="$(number_or "$(field "$section" cooldown)" 60)"
+	now="$(date +%s)"
+	last="$(number_or "$(cat "$RUN/state/rule-$section" 2>/dev/null)" 0)"
+	[ $((now - last)) -ge "$cooldown" ] || return
+	template="$(field "$section" template)"
+	rule_group="$(field "$section" group)"
+	override="$(field "$section" severity)"
+	case "$override" in normal|low|high|critical) SEVERITY="$override" ;; esac
+	GROUP="${rule_group:-default}"
+	TARGET=
+	if [ -n "$template" ]; then
+		TITLE="$(render_template "$(field "$template" title)")"
+		BODY="$(render_template "$(field "$template" body)")"
+	fi
+	route_channels
+	if [ "$DELIVERY_COUNT" -gt 0 ]; then
+		printf '%s' "$now" > "$RUN/state/rule-$section"
+		PUBLISHED=$((PUBLISHED + DELIVERY_COUNT))
+	fi
+}
+
+publish_event() {
+	local SOURCE INTERFACE DEVICE PUBLISHED=0
+	[ "$(setting enabled 0)" = 1 ] || { json_reply 0 disabled; return 1; }
+	read_input || { json_reply 0 invalid_json; return 1; }
+	json_get_var EVENT event
+	json_get_var SOURCE source
+	json_get_var INTERFACE interface
+	json_get_var DEVICE device
+	case "$EVENT" in ''|*[!a-zA-Z0-9._-]*) json_reply 0 invalid_event; return 1 ;; esac
+	INPUT="$INPUT"
+	message_fields || { json_reply 0 invalid_message; return 1; }
+	init_run || { json_reply 0 queue_unavailable; return 1; }
+	local section
+	for section in $(sections rule); do
+		json_load "$INPUT" >/dev/null 2>&1
+		json_get_var TITLE title
+		json_get_var BODY body
+		json_get_var SEVERITY severity
+		rule_route "$section"
+	done
+	json_init
+	json_add_boolean ok 1
+	json_add_int queued "$PUBLISHED"
+	json_dump
+}
+
+do_test() {
+	local channel title body severity response
+	read_input || { json_reply 0 invalid_json; return 1; }
+	json_get_var channel channel
+	json_get_var title title
+	json_get_var body body
+	[ -n "$channel" ] || { json_reply 0 missing_channel; return 1; }
+	[ "$(field "$channel" enabled)" = 1 ] || { json_reply 0 channel_disabled; return 1; }
+	[ "$(field "$channel" type)" ] || { json_reply 0 channel_unknown; return 1; }
+	title="${title:-CatOS Notify test}"
+	body="${body:-This is a notification delivery test.}"
+	json_init
+	json_add_string title "$title"
+	json_add_string body "$body"
+	json_add_string severity normal
+	response="$(json_dump)"
+	if printf '%s' "$response" | /usr/libexec/catos-notify/providers "$channel"; then
+		history "$channel" success test
+		json_reply 1 delivered
+	else
+		history "$channel" failed test
+		json_reply 0 delivery_failed
+		return 1
+	fi
+}
+
+all_wans_down() {
+	local iface status observed=0
+	for iface in $(setting wan_interfaces 'wan wan6'); do
+		case "$iface" in *[!a-zA-Z0-9_-]*|'') continue ;; esac
+		status="$(ubus -S call "network.interface.$iface" status 2>/dev/null)" || continue
+		[ -n "$status" ] || continue
+		observed=1
+		[ "$(printf '%s' "$status" | jsonfilter -e '@.up' 2>/dev/null)" = true ] &&
+			return 1
+	done
+	[ "$observed" = 1 ]
+}
+
+flush_queue() {
+	local file channel payload attempts maximum status now next processed=0
+	init_run || return 1
+	mkdir "$RUN/lock" 2>/dev/null || return 0
+	trap 'rmdir "$RUN/lock" 2>/dev/null' EXIT INT TERM
+	# Preserve bounded tmpfs backlog across prolonged WAN outages. During
+	# recovery delivery resumes without burning through the attempt budget.
+	all_wans_down && return 0
+	maximum="$(number_or "$(setting retry_limit 3)" 3)"
+	[ "$maximum" -ge 1 ] && [ "$maximum" -le 10 ] || maximum=3
+	for file in "$RUN"/queue/*.json; do
+		[ -f "$file" ] || continue
+		[ "$processed" -lt 8 ] || break
+		now="$(date +%s)"
+		next="$(number_or "$(cat "${file%.json}.next" 2>/dev/null)" 0)"
+		[ "$now" -ge "$next" ] || continue
+		processed=$((processed + 1))
+		payload="$(cat "$file")"
+		if ! json_load "$payload" 2>/dev/null; then
+			rm -f "$file" "${file%.json}.tries" "${file%.json}.next"
+			continue
+		fi
+		json_get_var channel channel
+		status=failed
+		if printf '%s' "$payload" | /usr/libexec/catos-notify/providers "$channel"; then
+			status=success
+			rm -f "$file" "${file%.json}.tries" "${file%.json}.next"
+		else
+			attempts="$(number_or "$(cat "${file%.json}.tries" 2>/dev/null)" 0)"
+			attempts=$((attempts + 1))
+			if [ "$attempts" -ge "$maximum" ]; then
+				rm -f "$file" "${file%.json}.tries" "${file%.json}.next"
+				status=exhausted
+			else
+				printf '%s' "$attempts" > "${file%.json}.tries"
+				# Retry 30s, 120s, 270s, ... without a busy loop.
+				printf '%s' "$((now + attempts * attempts * 30))" > "${file%.json}.next"
+			fi
+		fi
+		history "$channel" "$status" queued
+	done
+}
+
+show_status() {
+	local queued=0 line
+	init_run || return 1
+	set -- "$RUN"/queue/*.json
+	[ -f "$1" ] && queued=$#
+	json_init
+	[ "$(setting enabled 0)" = 1 ] && json_add_boolean enabled 1 ||
+		json_add_boolean enabled 0
+	json_add_int queued "$queued"
+	json_add_array history
+	if [ -f "$RUN/history" ]; then
+		local history_file="$RUN/history"
+		local lines
+		lines="$(tail -n 20 "$history_file")"
+		while IFS= read -r line; do
+			[ -n "$line" ] && json_add_string '' "$line"
+		done <<-EOF
+		$lines
+		EOF
+	fi
+	json_close_array
+	json_dump
+}
+
+generate_token() {
+	local token
+	token="$(openssl rand -hex 32 2>/dev/null)" || return 1
+	[ "${#token}" -eq 64 ] || return 1
+	if uci -q set "$CONFIG.main.receiver_token=$token" &&
+		uci -q commit "$CONFIG" &&
+		chmod 0600 /etc/config/catos_notify; then
+		json_reply 1 token_generated
+	else
+		json_reply 0 token_generation_failed
+		return 1
+	fi
+}
+
+case "${1:-}" in
+	send) send_message ;;
+	publish) publish_event ;;
+	test) do_test ;;
+	flush) flush_queue ;;
+	status) show_status ;;
+	token) generate_token ;;
+	*) printf '%s\n' 'Usage: catos-notify send|publish|test|flush|status|token' >&2; exit 2 ;;
+esac

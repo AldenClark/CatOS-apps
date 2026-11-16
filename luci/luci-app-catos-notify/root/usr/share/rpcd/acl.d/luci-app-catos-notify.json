@@ -1,8 +1,17 @@
 {
   "luci-app-catos-notify": {
-    "description": "Read CatOS Notify settings",
+    "description": "Manage CatOS Notify settings and send notifications",
     "read": {
-      "uci": ["catos_notify"]
+      "uci": ["catos_notify"],
+      "ubus": {
+        "catos.notify": ["status"]
+      }
+    },
+    "write": {
+      "uci": ["catos_notify"],
+      "ubus": {
+        "catos.notify": ["send", "publish", "test", "token"]
+      }
     }
   }
 }
