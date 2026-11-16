@@ -2,6 +2,7 @@
 'require view';
 'require rpc';
 'require ui';
+'require uci';
 
 var getStatus = rpc.declare({
 	object: 'catos.notify',
@@ -12,7 +13,7 @@ var getStatus = rpc.declare({
 var sendMessage = rpc.declare({
 	object: 'catos.notify',
 	method: 'send',
-	params: [ 'title', 'body', 'group' ],
+	params: [ 'title', 'body', 'targets' ],
 	expect: { '': {} }
 });
 
@@ -45,6 +46,41 @@ function messageField(id, label, type, placeholder) {
 		row: E('div', { 'class': 'catos-notify-compose-row' }, [
 			E('label', { 'class': 'catos-notify-compose-label', 'for': 'catos-notify-' + id }, label),
 			E('div', { 'class': 'catos-notify-compose-control' }, input)
+		])
+	};
+}
+
+function deliveryChoices() {
+	var choices = [];
+	uci.sections('catos_notify', 'group').forEach(function(group) {
+		if (/^[a-zA-Z0-9_-]+$/.test(group['.name']))
+			choices.push([ 'group:' + group['.name'], _('Group: ') + (group.name || group['.name']) ]);
+	});
+	uci.sections('catos_notify', 'channel').forEach(function(channel) {
+		if (/^[a-zA-Z0-9_-]+$/.test(channel['.name']))
+			choices.push([ 'channel:' + channel['.name'], _('Channel: ') + (channel.name || channel['.name']) ]);
+	});
+	return choices;
+}
+
+function targetsField() {
+	var checkboxes = deliveryChoices().map(function(choice) {
+		var checkbox = E('input', { 'type': 'checkbox', 'value': choice[0] });
+		return {
+			input: checkbox,
+			row: E('label', { 'class': 'catos-notify-target-item' }, [ checkbox, E('span', {}, choice[1]) ])
+		};
+	});
+	return {
+		checkboxes: checkboxes,
+		row: E('div', { 'class': 'catos-notify-compose-row' }, [
+			E('span', { 'class': 'catos-notify-compose-label' }, _('Delivery')),
+			E('div', { 'class': 'catos-notify-compose-control' }, [
+				checkboxes.length
+					? E('div', { 'class': 'catos-notify-targets' }, checkboxes.map(function(entry) { return entry.row; }))
+					: E('p', {}, _('No channels or groups configured. Add a channel first.')),
+				E('p', { 'class': 'description' }, _('Select one or more destinations. Channels included through multiple selections receive only one copy.'))
+			])
 		])
 	};
 }
@@ -87,14 +123,15 @@ function historyTable(records) {
 
 return view.extend({
 	load: function() {
-		return getStatus().catch(function() { return null; });
+		return uci.load('catos_notify').then(function() {
+			return getStatus().catch(function() { return null; });
+		});
 	},
 
 	render: function(status) {
 		var title = messageField('title', _('Title'), 'input');
 		var body = messageField('body', _('Message body'), 'textarea');
-		var group = messageField('group', _('Delivery group'), 'input', 'default');
-		group.input.value = 'default';
+		var targets = targetsField();
 
 		return E('div', {}, [
 			E('link', { 'rel': 'stylesheet', 'href': L.resource('view/catos/notify/overview.css') }),
@@ -109,11 +146,11 @@ return view.extend({
 			]),
 			E('div', { 'class': 'cbi-section' }, [
 				E('h3', {}, _('Send a message')),
-				E('p', {}, _('Send a one-off notification to every enabled channel in the chosen delivery group.')),
+				E('p', {}, _('Send a one-off notification to explicitly selected channels and delivery groups.')),
 				E('div', { 'class': 'catos-notify-compose' }, [
 					title.row,
 					body.row,
-					group.row,
+					targets.row,
 					E('div', { 'class': 'catos-notify-compose-row catos-notify-compose-actions' }, [
 						E('div', { 'class': 'catos-notify-compose-label', 'aria-hidden': 'true' }),
 						E('div', { 'class': 'catos-notify-compose-control' }, E('button', {
@@ -124,8 +161,15 @@ return view.extend({
 									ui.addNotification(null, E('p', {}, _('Enter a title and message body.')), 'warning');
 									return;
 								}
+								var selected = targets.checkboxes.filter(function(entry) {
+									return entry.input.checked;
+								}).map(function(entry) { return entry.input.value; });
+								if (!selected.length) {
+									ui.addNotification(null, E('p', {}, _('Select at least one delivery destination.')), 'warning');
+									return;
+								}
 								ev.currentTarget.disabled = true;
-								return sendMessage(title.input.value.trim(), body.input.value, group.input.value.trim() || 'default')
+								return sendMessage(title.input.value.trim(), body.input.value, selected)
 									.then(resultNotification)
 									.catch(function(err) {
 										ui.addNotification(null, E('p', {}, _('Request failed: ') + err.message), 'danger');

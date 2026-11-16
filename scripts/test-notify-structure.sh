@@ -47,6 +47,75 @@ if printf '%s' "$test_handler" | grep -Eq 'section_flag|setting enabled'; then
 	exit 1
 fi
 
+# Exercise the actual routing functions with named channel/group fixtures.
+# The same channel selected directly and through groups must be queued once.
+(
+	eval "$(sed -n '/^queue_channel() {/,/^}/p' "$core/catos-notify-dispatch")"
+	eval "$(sed -n '/^route_channels() {/,/^}/p' "$core/catos-notify-dispatch")"
+	eval "$(sed -n '/^valid_section_id() {/,/^}/p' "$core/catos-notify-dispatch")"
+	CONFIG=catos_notify
+	uci() {
+		[ "$1" = -q ] && shift
+		[ "$1" = get ] || return 1
+		case "$2" in
+			catos_notify.team|catos_notify.backup) printf group ;;
+			catos_notify.phone|catos_notify.bark|catos_notify.disabled) printf channel ;;
+			*) return 1 ;;
+		esac
+	}
+	field() {
+		case "$1.$2" in
+			team.channels) printf 'phone bark' ;;
+			backup.channels) printf 'phone disabled' ;;
+		esac
+	}
+	section_flag() { [ "$1" != disabled ]; }
+	queue_target() { QUEUED="$QUEUED $1"; }
+	history() { return 1; }
+	TITLE=example BODY=content SEVERITY=normal EVENT=wan.down
+	ROUTES='group:team channel:phone group:backup channel:disabled'
+	QUEUED=
+	route_channels
+	[ "$DELIVERY_COUNT" = 2 ] && [ "$QUEUED" = ' phone bark' ] || {
+		echo 'Grouped routing must deduplicate channels and exclude disabled members' >&2
+		exit 1
+	}
+	ROUTES='group:removed channel:removed group:team'
+	QUEUED=
+	route_channels
+	[ "$DELIVERY_COUNT" = 2 ] && [ "$QUEUED" = ' phone bark' ] || {
+		echo 'Removed references must not redirect to another channel' >&2
+		exit 1
+	}
+	ROUTES=
+	QUEUED=
+	route_channels
+	[ "$DELIVERY_COUNT" = 0 ] && [ -z "$QUEUED" ] || {
+		echo 'Empty targets must never fall back to a default group' >&2
+		exit 1
+	}
+)
+
+(
+	eval "$(sed -n '/^valid_section_id() {/,/^}/p' "$core/catos-notify-dispatch")"
+	eval "$(sed -n '/^read_targets() {/,/^}/p' "$core/catos-notify-dispatch")"
+	MOCK_KIND=array
+	MOCK_ROUTES='group:admins channel:phone'
+	json_get_type() { printf -v "$1" '%s' "$MOCK_KIND"; }
+	json_get_values() { printf -v "$1" '%s' "$MOCK_ROUTES"; }
+	read_targets && [ "$ROUTES" = "$MOCK_ROUTES" ] || {
+		echo 'Explicit target arrays must parse' >&2
+		exit 1
+	}
+	MOCK_ROUTES='group:../../etc/passwd'
+	! read_targets || { echo 'Invalid section IDs must be rejected' >&2; exit 1; }
+	MOCK_ROUTES=
+	! read_targets || { echo 'Empty target arrays must be rejected' >&2; exit 1; }
+	MOCK_KIND=string
+	MOCK_ROUTES='channel:phone'
+	! read_targets || { echo 'Targets must be passed as an array' >&2; exit 1; }
+)
+
 node - "$core/catos_notify.config" "$ui_dir/rules.js" "$ui_dir/channels.js" "$core/catos-notify-providers" <<'NODE'
 const fs = require('fs');
 const assert = require('assert');
@@ -77,6 +146,14 @@ for (const p of providers) {
   assert(new RegExp('\\b' + p + '\\)').test(provider), 'Missing provider handler: ' + p);
   assert(uiChannels.includes("'"+ p + "'"), 'Missing provider selector: ' + p);
 }
+assert(!/^\s*config template\b/m.test(config), 'Templates must be owned by rules');
+assert(!/^\s*option (group|template)\b/m.test(config), 'Default rules must not use legacy routing fields');
+for (const block of config.split(/^config rule '[^']+'\s*$/gm).slice(1)) {
+  assert(/option title '/.test(block) && /option body '/.test(block), 'Each rule needs an independent template');
+  assert(!/\blist targets\b/.test(block), 'No implicit delivery targets in default rules');
+}
+assert(!uiChannels.includes("s.option(form.Value, 'group'"), 'Channel must not own a delivery group');
+assert(uiRules.includes("s.option(form.MultiValue, 'targets'"), 'Rules must support multiple delivery destinations');
 assert(config.includes("option receiver_enabled '0'"), 'Receiver must default off');
 assert(config.includes("option receiver_scope 'lan'"), 'Receiver must default to LAN');
 assert(config.includes("option receiver_auth '1'"), 'Receiver auth must default on');
@@ -93,6 +170,49 @@ NODE
 node - <<'NODE'
 const assert = require('assert');
 const fs = require('fs');
+const base = 'luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/';
+const groupSource = fs.readFileSync(base + 'groups.js', 'utf8');
+const channelSource = fs.readFileSync(base + 'channels.js', 'utf8');
+function inspectView(source, type) {
+  let section, addedId;
+  const options = [];
+  const form = {
+    Map: function() {
+      this.data = {get: () => null};
+      this.section = () => section = {
+        map: this,
+        handleAdd(_ev, id) { addedId = id; return id; },
+        option(_cls, key, title) {
+          const result = {key, title, values: [], value(value, label) {this.values.push([value, label]);}, depends() {}};
+          options.push(result);
+          return result;
+        }
+      };
+      this.render = () => options;
+    },
+    GridSection: function(){}, Flag: function(){}, Value: function(){},
+    ListValue: function(){}, MultiValue: function(){}, Button: function(){}
+  };
+  const uci = {sections: (_config, kind) => kind === 'channel' ? [{'.name':'phone',name:'My phone'}] : []};
+  const rpc = {declare: () => () => Promise.resolve({ok:true})};
+  const app = Function('view','form','uci','rpc','ui','_',source)(
+    {extend: v=>v}, form, uci, rpc, {addNotification:()=>{}}, s=>s);
+  app.render();
+  section.handleAdd({});
+  assert(new RegExp(`^${type}_[a-z0-9_]+$`).test(addedId), `${type} must use a stable named UCI section`);
+  return options;
+}
+const groups = inspectView(groupSource, 'group');
+assert.deepEqual(groups.find(o => o.key === 'channels').values, [['phone', 'My phone']]);
+assert(!groups.some(o => o.key === 'group'), 'Group members must be configured on the group itself');
+const channels = inspectView(channelSource, 'channel');
+assert(!channels.some(o => o.key === 'group'), 'Channel editor must have no group input');
+console.log('CatOS Notify: stable channel/group section IDs and group-member selector verified.');
+NODE
+
+node - <<'NODE'
+const assert = require('assert');
+const fs = require('fs');
 const source = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/rules.js', 'utf8');
 // LuCI supplies String.format(), including %h escaping.
 String.prototype.format = function(value) {
@@ -101,18 +221,24 @@ String.prototype.format = function(value) {
 function renderRules(translate) {
   const options = [];
   let storedEvent = '';
-  const section = {option(_type, key, title) {
-    const option = {key, title, values: [], value(id, label) { this.values.push([id, label]); }, cfgvalue() { return storedEvent; }};
+const section = {option(_type, key, title) {
+    const option = {key, title, values: [], value(id, label) { this.values.push([id, label]); }, cfgvalue() { return key === 'event' ? storedEvent : key === 'targets' ? ['group:admins', 'channel:phone'] : ''; }};
     options.push(option);
     return option;
   }};
   const form = {
     Map: function() { this.section = () => section; this.render = () => options; },
-    GridSection: function(){}, Flag: function(){}, Value: function(){}, ListValue: function(){}
+    GridSection: function(){}, Flag: function(){}, Value: function(){}, ListValue: function(){},
+    MultiValue: function(){}, TextValue: function(){}, DummyValue: function(){}
   };
-  const view = Function('view', 'form', '_', source)({extend: o => o}, form, translate);
+  const uci = {
+    sections: (_config, kind) => kind === 'channel' ? [{'.name':'phone',name:'Phone'}] : [{'.name':'admins',name:'Administrators'}],
+    get: () => 'wan.down'
+  };
+  const view = Function('view', 'form', 'uci', '_', source)({extend: o => o}, form, uci, translate);
   const result = view.render();
-  return {event: result.find(o => o.key === 'event'), setStoredEvent: id => { storedEvent = id; }};
+  return {event: result.find(o => o.key === 'event'), delivery: result.find(o => o.key === 'targets'),
+    vars: result.find(o => o.key === '_variables'), setStoredEvent: id => { storedEvent = id; }};
 }
 const english = renderRules(s => s);
 assert.equal(english.event.title, 'Event', 'Grid column should describe an event, not expose its storage ID');
@@ -124,6 +250,9 @@ english.setStoredEvent('ddns.updated');
 assert.equal(english.event.textvalue('sample'), 'ddns.updated', 'Custom event IDs must remain visible');
 english.setStoredEvent('<unsafe.event>');
 assert.equal(english.event.textvalue('sample'), '&lt;unsafe.event&gt;', 'Custom event IDs must be HTML-escaped');
+assert.deepEqual(english.delivery.values.map(v => v[0]), ['group:admins', 'channel:phone'], 'Delivery selector must include both groups and channels');
+assert.equal(english.delivery.textvalue('sample'), 'Group: Administrators, Channel: Phone');
+assert(english.vars.cfgvalue('sample').includes('{{old}}'), 'Event variables help must include event-specific fields');
 const chinese = renderRules(s => s === 'WAN · Disconnected' ? 'WAN · 连接断开' : s);
 chinese.setStoredEvent('wan.down');
 assert.equal(chinese.event.textvalue('sample'), 'WAN · 连接断开', 'Grid label must follow LuCI language');
@@ -173,7 +302,7 @@ assert(/@media\s*\(max-width:\s*640px\)[\s\S]*grid-template-columns:\s*minmax\(0
 const notifications = [];
 const sent = [];
 function E(tag, attrs = {}, contents) {
-  return {tag, attrs, children: Array.isArray(contents) ? contents : contents == null ? [] : [contents], value: ''};
+  return {tag, attrs, children: Array.isArray(contents) ? contents : contents == null ? [] : [contents], value: attrs.value || ''};
 }
 function find(rootNode, predicate) {
   if (typeof rootNode !== 'object' || rootNode === null) return null;
@@ -188,21 +317,25 @@ const rpc = { declare: ({method}) => (...args) => {
   if (method === 'send') { sent.push(args); return Promise.resolve({ok: true}); }
   return Promise.resolve({enabled: true, queued: 0, history: []});
 }};
-const app = Function('E', '_', 'view', 'rpc', 'ui', 'L', source)(
+const uci = {sections: (_config, kind) => kind === 'channel' ? [{'.name':'phone',name:'Phone'}] : [{'.name':'admins',name:'Administrators'}]};
+const app = Function('E', '_', 'view', 'rpc', 'ui', 'L', 'uci', source)(
   E, s => s, {extend: view => view}, rpc,
   {addNotification: (_title, content) => notifications.push(content)},
-  {resource: p => p});
+  {resource: p => p}, uci);
 const tree = app.render({enabled: true, queued: 0, history: []});
 assert(find(tree, n => n.tag === 'link' && n.attrs.href === 'view/catos/notify/overview.css'), 'Overview stylesheet must be loaded');
 const compose = find(tree, n => n.attrs?.class === 'catos-notify-compose');
 assert(compose && compose.children.length === 4, 'Composer must have three fields and one action row');
-const fields = ['title', 'body', 'group'];
+const fields = ['title', 'body'];
 for (let i = 0; i < fields.length; i++) {
   const row = compose.children[i];
   assert.equal(row.attrs.class, 'catos-notify-compose-row');
   assert.equal(row.children[0].attrs.for, 'catos-notify-' + fields[i]);
   assert.equal(row.children[1].attrs.class, 'catos-notify-compose-control');
 }
+const groupTarget = find(compose, n => n.tag === 'input' && n.attrs?.value === 'group:admins');
+const channelTarget = find(compose, n => n.tag === 'input' && n.attrs?.value === 'channel:phone');
+assert(groupTarget && channelTarget, 'Manual send must offer individual channels and groups');
 const button = find(compose, n => n.tag === 'button');
 assert(button && typeof button.attrs.click === 'function', 'Send button must remain interactive');
 const title = find(compose, n => n.attrs?.id === 'catos-notify-title');
@@ -213,7 +346,11 @@ title.value = 'Test';
 body.value = 'Example';
 (async () => {
   await button.attrs.click({currentTarget: button});
-  assert.deepEqual(sent, [['Test', 'Example', 'default']]);
+  assert.equal(sent.length, 0, 'No destination may be selected implicitly');
+  groupTarget.checked = true;
+  channelTarget.checked = true;
+  await button.attrs.click({currentTarget: button});
+  assert.deepEqual(sent, [['Test', 'Example', ['group:admins', 'channel:phone']]]);
   assert.equal(button.disabled, false, 'Send button must be re-enabled after completion');
   assert(notifications.length >= 2, 'Validation and success feedback must be shown');
   console.log('CatOS Notify: overview composer structure, responsive CSS and button flow verified.');

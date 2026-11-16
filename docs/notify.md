@@ -5,7 +5,7 @@ CatOS Notify is a lightweight OpenWrt notification service. It can be installed 
 ## Features
 
 - Delivery to Bark, PushGo, ntfy, Feishu, DingTalk group robots, WeCom, Telegram and generic JSON webhooks.
-- Multiple channel instances, delivery groups, editable notification templates and event routing rules.
+- Multiple channel instances, independently managed delivery groups, per-event templates and event routing rules.
 - WAN state, IPv4/IPv6 and delegated prefixes, public addresses, single-primary WAN failover, known and unknown devices, SSH/LuCI authentication failures, boot/shutdown, system resource thresholds and periodic summaries.
 - Local command-line and ubus methods for other applications.
 - An HTTP message receiver that is **disabled by default** and never modifies firewall policy.
@@ -15,11 +15,12 @@ This is an early implementation. Test it on the target OpenWrt release and hardw
 ## Configure and start
 
 1. Install `catos-notify` and optionally `luci-app-catos-notify`. To display Simplified Chinese when selected in LuCI, also install `luci-i18n-catos-notify-zh-cn` (English needs no additional package).
-2. Create at least one enabled `channel` in LuCI or `/etc/config/catos_notify`. Set its `group` (default: `default`).
-3. Under **Settings → Service**, enable the service and click **Save & Apply**.
-4. Under **Channels**, test the destination. Save channel changes before sending a test.
+2. Create at least one `channel` in LuCI or `/etc/config/catos_notify`. Test it under **Channels** after saving changes (the test also works while the channel is disabled).
+3. Optionally create **Delivery groups** and explicitly add channels as members. A channel can belong to multiple groups.
+4. Under **Event rules**, choose one or more channels and/or groups under **Delivery** and edit that rule's title/body template. No channel or rule has an implicit delivery group.
+5. Under **Settings → Service**, enable the service and click **Save & Apply**.
 
-The LuCI interface is organized into **Overview** (status, recent deliveries and manual messages), **Channels**, **Event rules**, **Templates**, **Monitored devices**, and **Settings** (service, network, login, resource and HTTP receiver settings). Each page works with the same `/etc/config/catos_notify` configuration; the core service also works without LuCI.
+The LuCI interface is organized into **Overview** (status, recent deliveries and manual messages), **Channels**, **Delivery groups**, **Event rules** (including each event's template), **Monitored devices**, and **Settings** (service, network, login, resource and HTTP receiver settings). Each page works with the same `/etc/config/catos_notify` configuration; the core service also works without LuCI.
 
 From an SSH session:
 
@@ -34,10 +35,10 @@ Runtime state, delivery queue, deduplication and history are in `/tmp/catos-noti
 
 ## Call from another package
 
-Send an immediate message to the configured `default` group:
+Send an immediate message to explicit destination references (named UCI section IDs):
 
 ```sh
-printf '%s\n' '{"title":"DDNS","body":"A DNS record was updated","group":"default"}' |
+printf '%s\n' '{"title":"DDNS","body":"A DNS record was updated","targets":["channel:phone","group:admins"]}' |
   catos-notify send
 ```
 
@@ -48,7 +49,9 @@ printf '%s\n' '{"source":"catos-ddns","event":"ddns.updated","title":"DDNS updat
   catos-notify publish
 ```
 
-The corresponding LuCI event rule must use the exact event name `ddns.updated` and an enabled target group. Notification routing is asynchronous; a successful enqueue response does not mean the remote provider has already delivered the message.
+The corresponding LuCI event rule must use the exact event name `ddns.updated`, select at least one channel or group under **Delivery**, and define a title/body template. A single channel selected both directly and via multiple groups receives one queued message per matching rule. A disabled channel is excluded from normal deliveries; an individual test is still allowed. Notification routing is asynchronous; a successful enqueue response does not mean the remote provider has already delivered the message.
+
+For a rule's templates, the service substitutes literal `{{router}}`, `{{event}}`, `{{time}}`, `{{body}}`, `{{source}}`, `{{severity}}`, `{{interface}}`, `{{device}}`, `{{old}}`, `{{new}}`, and flat fields from `data`/`variables`. Unknown placeholders remain literal. Templates are not shared between rules.
 
 The service also registers the `catos.notify` ubus object with `send`, `publish`, `test`, `status` and `token` methods. Methods exposed to LuCI are restricted by the package's rpcd ACL. Third-party packages should use the CLI as root or set their own appropriate ubus ACLs.
 
@@ -57,12 +60,12 @@ The service also registers the `catos.notify` ubus object with `send`, `publish`
 | UCI section | Purpose | Important fields |
 | --- | --- | --- |
 | `settings main` | Service and monitor | `enabled`, intervals, thresholds, receiver settings |
-| `channel` | Delivery destination | `type`, `name`, `group`, `enabled`, provider credentials |
-| `rule` | Event subscription | `event`, `group`, `template`, `cooldown`, optional `interface` / `source` |
-| `template` | Safe text template | `title`, `body` with literal `{{name}}` substitution |
+| `channel 'phone'` | Named delivery destination | `type`, `name`, `enabled`, provider credentials |
+| `group 'admins'` | Named collection of channels | `name`, repeated `list channels 'phone'` |
+| `rule` | Event subscription, destination selection and its own template | `event`, repeated `list targets 'channel:phone'` / `list targets 'group:admins'`, `title`, `body`, `cooldown`, optional filters |
 | `device` | Known LAN device | `name`, `mac`, `ip`, `monitor` |
 
-The eight provider identifiers are `bark`, `pushgo`, `ntfy`, `feishu`, `dingtalk`, `wecom`, `telegram`, and `webhook`.
+Channel and group UCI section names are stable IDs (no spaces, use letters, digits, `_` or `-`); LuCI generates these automatically. Removing a channel does not renumber another channel's references. Deleted destination IDs remain visibly marked as missing in the rule/group editors until removed. No default group, fallback group, or shared template exists. The eight provider identifiers are `bark`, `pushgo`, `ntfy`, `feishu`, `dingtalk`, `wecom`, `telegram`, and `webhook`.
 
 | Provider | Fields |
 | --- | --- |
@@ -90,7 +93,7 @@ X-CatOS-Token: <random secret>
 Example JSON:
 
 ```json
-{"title":"UPS","body":"Battery is low","group":"default"}
+{"title":"UPS","body":"Battery is low","targets":["group:admins"]}
 ```
 
 Before use, enable `receiver_enabled` and generate a token with the LuCI button or `catos-notify token`. `receiver_scope=lan` requires the client's actual route to use a configured LAN device. The `receiver_auth` option may be disabled **only for LAN scope**. With `receiver_scope=external`, TLS and authentication are always enforced even if `receiver_auth=0`.

@@ -10,9 +10,6 @@ msgstr "允许访问的局域网设备"
 msgid "Allowed source"
 msgstr "允许的访问来源"
 
-msgid "Available templates"
-msgstr "可用模板"
-
 msgid "Bark device / WeCom key"
 msgstr "Bark 设备密钥 / 企业微信 Key"
 
@@ -31,17 +28,11 @@ msgstr "渠道"
 msgid "Channels"
 msgstr "通知渠道"
 
-msgid "Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups."
-msgstr "通知渠道是消息的送达目标。为每个服务商账户或设备创建渠道，再将渠道分配到投递分组。"
-
 msgid "Channel not found. Save & Apply before testing."
 msgstr "未找到该通知渠道，请先保存并应用配置，再发送测试。"
 
 msgid "Check public IPv4/IPv6"
 msgstr "检测公网 IPv4/IPv6 地址"
-
-msgid "Choose what triggers a notification and where it is delivered. A disabled rule suppresses its event."
-msgstr "选择触发通知的事件以及投递目标。禁用某条规则后，该规则对应的事件不会发送通知。"
 
 msgid "Configure delivery channels first, then select which events should send notifications."
 msgstr "请先配置通知渠道，再选择需要发送通知的事件。"
@@ -61,9 +52,6 @@ msgstr "冷却时间（秒）"
 msgid "Could not queue message: "
 msgstr "消息入队失败："
 
-msgid "Could not queue template: "
-msgstr "模板消息入队失败："
-
 msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
 msgstr "统计近期 SSH 和 LuCI 登录失败次数。开启对应事件规则后才会发送告警。"
 
@@ -75,9 +63,6 @@ msgstr "自定义请求头名称"
 
 msgid "Custom header value"
 msgstr "自定义请求头内容"
-
-msgid "Delivery group"
-msgstr "投递分组"
 
 msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
 msgstr "投递失败，请检查服务商地址、凭据以及网络连接。"
@@ -217,9 +202,6 @@ msgstr "消息已加入投递队列。"
 msgid "Message body"
 msgstr "消息正文"
 
-msgid "Message templates"
-msgstr "消息模板"
-
 msgid "Minimum available memory (MiB)"
 msgstr "最低可用内存（MiB）"
 
@@ -310,9 +292,6 @@ msgstr "投递队列已满"
 msgid "Queue message"
 msgstr "加入发送队列"
 
-msgid "Queue test message"
-msgstr "发送模板测试消息"
-
 msgid "Queued delivery"
 msgstr "后台投递"
 
@@ -340,12 +319,6 @@ msgstr "结果"
 msgid "Router name"
 msgstr "路由器名称"
 
-msgid "Rules and manual messages target a group, so multiple channels can receive the same event."
-msgstr "事件规则和手动消息按分组投递，因此同一事件可以发送至多个通知渠道。"
-
-msgid "Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination."
-msgstr "新增渠道或修改凭据后，请先点击“保存并应用”再测试。测试通知将直接发送至所选目标。"
-
 msgid "Security · Repeated LuCI login failures"
 msgstr "安全 · LuCI 多次登录失败"
 
@@ -355,14 +328,8 @@ msgstr "安全 · SSH 多次登录失败"
 msgid "Select a built-in event or type an exact custom event ID, such as ddns.updated."
 msgstr "选择内置事件，或输入准确的自定义事件 ID，例如 ddns.updated。"
 
-msgid "Select the section ID of a message template, usually default or summary."
-msgstr "指定消息模板的配置段 ID，通常为 default 或 summary。"
-
 msgid "Send a message"
 msgstr "发送消息"
-
-msgid "Send a one-off notification to every enabled channel in the chosen delivery group."
-msgstr "向所选分组内所有已启用的通知渠道发送一次性消息。"
 
 msgid "Send test"
 msgstr "发送测试"
@@ -412,15 +379,6 @@ msgstr "系统 · 启动完成"
 msgid "Telegram chat ID"
 msgstr "Telegram 会话 ID"
 
-msgid "Template ID"
-msgstr "模板 ID"
-
-msgid "Templates"
-msgstr "消息模板"
-
-msgid "Templates define the title and body of notifications. Event rules refer to a template by its section ID."
-msgstr "消息模板定义通知的标题和正文。事件规则通过配置段 ID 引用模板。"
-
 msgid "Test failed: "
 msgstr "测试失败："
 
@@ -429,12 +387,6 @@ msgstr "测试消息"
 
 msgid "Test notification delivered."
 msgstr "测试通知已投递。"
-
-msgid "Test template queued for the default delivery group."
-msgstr "模板测试消息已加入默认分组的投递队列。"
-
-msgid "The event ID is the trigger. The delivery group must match a configured channel group. Use the template ID to control the message format."
-msgstr "事件 ID 决定触发条件；投递分组须与通知渠道的分组一致；模板 ID 决定消息格式。"
 
 msgid "The latest delivery attempts are stored in memory and cleared when the router restarts."
 msgstr "最近的投递尝试记录保存在内存中，路由器重启后会清空。"
@@ -466,17 +418,11 @@ msgstr "未知错误"
 msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
 msgstr "请通过 X-CatOS-Token 请求头发送此密钥，并妥善保管。"
 
-msgid "Use {{body}} for the event details and {{router}} for the configured router name."
-msgstr "使用 {{body}} 插入事件详情，使用 {{router}} 插入配置的路由器名称。"
-
 msgid "Used as the {{router}} variable in notification templates."
 msgstr "此名称会作为消息模板中的 {{router}} 变量。"
 
 msgid "Uses external IP lookup services. Disable this to stop those external requests."
 msgstr "该功能会请求外部公网 IP 查询服务。关闭后不再发起这些外部请求。"
-
-msgid "Variables: {{router}}, {{event}}, {{time}}, {{body}}, {{old}}, {{new}}, {{interface}}. Custom event data fields can also be used."
-msgstr "可用变量：{{router}}、{{event}}、{{time}}、{{body}}、{{old}}、{{new}}、{{interface}}，以及自定义事件提供的数据字段。"
 
 msgid "WAN network interfaces"
 msgstr "WAN 网络接口"
@@ -519,3 +465,87 @@ msgstr "例如：我的手机"
 
 msgid "ntfy topic"
 msgstr "ntfy 主题"
+
+msgid "A channel may be included in multiple groups. A group with no channels cannot deliver messages."
+msgstr "同一渠道可以加入多个投递分组。没有成员渠道的分组无法投递消息。"
+
+msgid "A delivery group contains one or more channels. Manage membership here; channels themselves do not belong to any default group."
+msgstr "投递分组可包含多个渠道，成员关系在这里管理。渠道本身不属于任何默认分组。"
+
+msgid "Available variables for this event"
+msgstr "此事件可用的模板变量"
+
+msgid "Channel: "
+msgstr "渠道："
+
+msgid "Choose channels and/or groups under Delivery. If a channel is selected both directly and through a group, it receives one message."
+msgstr "在“投递”中选择渠道和／或分组。若同一渠道被直接选中且包含在分组中，也只会接收一份消息。"
+
+msgid "Configure a delivery destination here. Delivery groups maintain their own channel membership."
+msgstr "在这里配置通知目的地。投递分组单独管理自己的成员渠道。"
+
+msgid "Configured delivery groups"
+msgstr "已配置的投递分组"
+
+msgid "Delivery"
+msgstr "投递"
+
+msgid "Delivery groups"
+msgstr "投递分组"
+
+msgid "Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing."
+msgstr "每个渠道都有稳定的内部标识，删除其他渠道不会导致分组引用错乱。测试前请先保存并应用。"
+
+msgid "Each rule selects an event, its destinations and its own message template. No destination is selected automatically."
+msgstr "每条规则独立选择事件、投递目标以及消息模板；系统不会自动选择投递目标。"
+
+msgid "Group name"
+msgstr "分组名称"
+
+msgid "Group: "
+msgstr "分组："
+
+msgid "Member channels"
+msgstr "成员渠道"
+
+msgid "Message body template"
+msgstr "消息正文模板"
+
+msgid "Missing channel: "
+msgstr "渠道已不存在："
+
+msgid "Missing destination: "
+msgstr "投递目标已不存在："
+
+msgid "No channels or groups configured. Add a channel first."
+msgstr "尚未配置渠道或分组，请先新增通知渠道。"
+
+msgid "No member channels"
+msgstr "尚无成员渠道"
+
+msgid "Not configured"
+msgstr "尚未配置"
+
+msgid "Save & Apply before testing new channels or changed credentials."
+msgstr "新增渠道或修改凭据后，请先保存并应用，再发送测试。"
+
+msgid "Select any number of delivery groups and individual channels. An empty selection means this rule does not deliver."
+msgstr "可选择任意多个分组及单独渠道。未选择目标时，此规则不会发送通知。"
+
+msgid "Select at least one delivery destination."
+msgstr "请至少选择一个投递目标。"
+
+msgid "Select one or more destinations. Channels included through multiple selections receive only one copy."
+msgstr "选择一个或多个投递目标；重复选中的渠道只会接收一份。"
+
+msgid "Send a one-off notification to explicitly selected channels and delivery groups."
+msgstr "向明确选中的通知渠道和投递分组发送一次性消息。"
+
+msgid "This title template belongs only to this event rule."
+msgstr "此标题模板仅属于当前事件规则，不与其他规则共用。"
+
+msgid "Use {{body}} for the event details. Extra flat variables from the event data are also available."
+msgstr "使用 {{body}} 插入事件详情，也可以使用事件数据中提供的其他平面变量。"
+
+msgid "e.g. Administrator devices"
+msgstr "例如：管理员设备"

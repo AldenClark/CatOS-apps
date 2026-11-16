@@ -136,22 +136,20 @@ queue_target() {
 }
 
 DELIVERY_COUNT=0
-GROUP=
-TARGET=
+ROUTES=
+ROUTED_CHANNELS=
 TITLE=
 BODY=
 SEVERITY=
 EVENT=
 
 queue_channel() {
-	local section="$1" group
+	local section="$1"
+	# A channel can be selected directly and by several groups. Queue it once.
+	case " $ROUTED_CHANNELS " in *" $section "*) return 0 ;; esac
+	[ "$(uci -q get "$CONFIG.$section" 2>/dev/null)" = channel ] || return 0
 	section_flag "$section" enabled 1 || return 0
-	if [ -n "$TARGET" ]; then
-		[ "$TARGET" = "$section" ] || return 0
-	else
-		group="$(field "$section" group)"
-		[ "${group:-default}" = "$GROUP" ] || return 0
-	fi
+	ROUTED_CHANNELS="$ROUTED_CHANNELS $section"
 	if queue_target "$section" "$TITLE" "$BODY" "$SEVERITY" "$EVENT"; then
 		DELIVERY_COUNT=$((DELIVERY_COUNT + 1))
 	else
@@ -160,32 +158,57 @@ queue_channel() {
 }
 
 route_channels() {
-	local section
+	local route section members
 	DELIVERY_COUNT=0
-	for section in $(sections channel); do queue_channel "$section"; done
+	ROUTED_CHANNELS=
+	for route in $ROUTES; do
+		case "$route" in
+			channel:*)
+				section="${route#channel:}"
+				valid_section_id "$section" && queue_channel "$section"
+				;;
+			group:*)
+				section="${route#group:}"
+				valid_section_id "$section" || continue
+				[ "$(uci -q get "$CONFIG.$section" 2>/dev/null)" = group ] || continue
+				members="$(field "$section" channels)"
+				for member in $members; do
+					valid_section_id "$member" && queue_channel "$member"
+				done
+				;;
+		esac
+	done
+}
+
+valid_section_id() {
+	case "$1" in ''|*[!a-zA-Z0-9_-]*) return 1 ;; esac
+}
+
+read_targets() {
+	local kind route section
+	json_get_type kind targets
+	[ "$kind" = array ] || return 1
+	json_get_values ROUTES targets || return 1
+	[ -n "$ROUTES" ] || return 1
+	for route in $ROUTES; do
+		case "$route" in
+			channel:*|group:*)
+				section="${route#*:}"
+				valid_section_id "$section" || return 1
+				;;
+			*) return 1 ;;
+		esac
+	done
 }
 
 message_fields() {
-	local tmpl
 	json_get_var TITLE title
 	json_get_var BODY body
 	json_get_var SEVERITY severity
-	json_get_var GROUP group
-	json_get_var TARGET channel
-	json_get_var tmpl template
 	SEVERITY="${SEVERITY:-normal}"
-	GROUP="${GROUP:-default}"
 	case "$SEVERITY" in normal|low|high|critical) ;; *) SEVERITY=normal ;; esac
-	if [ -n "$tmpl" ]; then
-		local template_title template_body
-		template_title="$(field "$tmpl" title)"
-		template_body="$(field "$tmpl" body)"
-		[ -n "$template_title$template_body" ] || return 1
-		TITLE="$(render_template "$template_title")"
-		BODY="$(render_template "$template_body")"
-	fi
 	[ -n "$TITLE$BODY" ] && [ "${#TITLE}" -le 512 ] &&
-		[ "${#BODY}" -le 8192 ] && [ "${#GROUP}" -le 80 ]
+		[ "${#BODY}" -le 8192 ]
 }
 
 send_message() {
@@ -194,6 +217,7 @@ send_message() {
 	read_input || { json_reply 0 invalid_json; return 1; }
 	EVENT=message
 	message_fields || { json_reply 0 invalid_message; return 1; }
+	read_targets || { json_reply 0 invalid_targets; return 1; }
 	route_channels
 	count="$DELIVERY_COUNT"
 	json_init
@@ -209,7 +233,7 @@ send_message() {
 }
 
 rule_route() {
-	local section="$1" match rule_group template cooldown last now filter override
+	local section="$1" match cooldown last now filter override
 	section_flag "$section" enabled 1 || return
 	match="$(field "$section" event)"
 	[ "$match" = "$EVENT" ] || return
@@ -223,16 +247,14 @@ rule_route() {
 	now="$(date +%s)"
 	last="$(number_or "$(cat "$RUN/state/rule-$section" 2>/dev/null)" 0)"
 	[ $((now - last)) -ge "$cooldown" ] || return
-	template="$(field "$section" template)"
-	rule_group="$(field "$section" group)"
+	ROUTES="$(field "$section" targets)"
+	[ -n "$ROUTES" ] || return
 	override="$(field "$section" severity)"
 	case "$override" in normal|low|high|critical) SEVERITY="$override" ;; esac
-	GROUP="${rule_group:-default}"
-	TARGET=
-	if [ -n "$template" ]; then
-		TITLE="$(render_template "$(field "$template" title)")"
-		BODY="$(render_template "$(field "$template" body)")"
-	fi
+	TITLE="$(render_template "$(field "$section" title)")"
+	BODY="$(render_template "$(field "$section" body)")"
+	[ -n "$TITLE$BODY" ] && [ "${#TITLE}" -le 512 ] &&
+		[ "${#BODY}" -le 8192 ] || return
 	route_channels
 	if [ "$DELIVERY_COUNT" -gt 0 ]; then
 		printf '%s' "$now" > "$RUN/state/rule-$section"
@@ -249,8 +271,8 @@ publish_event() {
 	json_get_var INTERFACE interface
 	json_get_var DEVICE device
 	case "$EVENT" in ''|*[!a-zA-Z0-9._-]*) json_reply 0 invalid_event; return 1 ;; esac
-	# A structured event may intentionally carry only metadata. Matching
-	# rules can generate its entire text through a named template.
+	# A structured event may intentionally carry only metadata. Each matching
+	# rule owns its own title/body template and determines its destinations.
 	message_fields || true
 	if [ "${#TITLE}" -gt 512 ] || [ "${#BODY}" -gt 8192 ]; then
 		json_reply 0 invalid_message
@@ -278,7 +300,12 @@ do_test() {
 	json_get_var title title
 	json_get_var body body
 	[ -n "$channel" ] || { json_reply 0 missing_channel; return 1; }
-	[ -n "$(field "$channel" type)" ] || { json_reply 0 channel_unknown; return 1; }
+	valid_section_id "$channel" &&
+		[ "$(uci -q get "$CONFIG.$channel" 2>/dev/null)" = channel ] &&
+		[ -n "$(field "$channel" type)" ] || {
+		json_reply 0 channel_unknown
+		return 1
+	}
 	# A manual test exercises the saved provider credentials even when the
 	# channel is disabled for scheduled/event-driven deliveries.
 	title="${title:-CatOS Notify test}"

@@ -15,11 +15,23 @@ var testChannel = rpc.declare({
 return view.extend({
 	render: function() {
 		var m = new form.Map('catos_notify', _('Notification channels'),
-			_('Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups.'));
+			_('Configure a delivery destination here. Delivery groups maintain their own channel membership.'));
 		var s = m.section(form.GridSection, 'channel', _('Configured channels'));
 		s.addremove = true;
 		s.anonymous = true;
-		s.description = _('Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination.');
+		s.description = _('Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing.');
+		// LuCI normally creates anonymous @channel[index] sections. Such indices
+		// shift when a different channel is removed, potentially misrouting
+		// notifications. Create named UCI sections without asking for IDs.
+		var originalAdd = s.handleAdd;
+		s.handleAdd = function(ev) {
+			var id;
+			do {
+				id = 'channel_' + Date.now().toString(36) + '_' +
+					Math.random().toString(36).slice(2, 10);
+			} while (this.map.data.get('catos_notify', id) != null);
+			return originalAdd.call(this, ev, id);
+		};
 
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
@@ -37,10 +49,6 @@ return view.extend({
 			[ 'webhook', _('Generic Webhook') ]
 		].forEach(function(type) { o.value(type[0], type[1]); });
 		o.rmempty = false;
-
-		o = s.option(form.Value, 'group', _('Delivery group'));
-		o.default = 'default';
-		o.description = _('Rules and manual messages target a group, so multiple channels can receive the same event.');
 
 		o = s.option(form.Value, 'url', _('Server / webhook URL'));
 		o.modalonly = true;
@@ -100,7 +108,7 @@ return view.extend({
 			return uci.changes().then(function(changes) {
 				if (changes.catos_notify && changes.catos_notify.length) {
 					ui.addNotification(null, E('p', {},
-						_('Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination.')),
+						_('Save & Apply before testing new channels or changed credentials.')),
 						'warning');
 					return;
 				}
