@@ -20,6 +20,7 @@ for app in notify ddns acme; do
 
   grep -q "PKG_NAME:=catos-${app}" "${core}/Makefile"
   grep -q "LUCI_DEPENDS:=+luci-base +catos-${app}" "${luci}/Makefile"
+  grep -q 'call BuildPackage' "${luci}/Makefile"
   grep -q "config settings 'main'" "${config}"
 
   node --check "${view}"

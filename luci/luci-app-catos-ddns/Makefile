@@ -10,3 +10,5 @@ LUCI_PKGARCH:=all
 LUCI_URL:=https://github.com/AldenClark/CatOS-apps
 
 include $(TOPDIR)/feeds/luci/luci.mk
+
+# call BuildPackage - OpenWrt buildroot signature
