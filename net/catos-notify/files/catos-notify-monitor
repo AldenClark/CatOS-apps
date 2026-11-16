@@ -222,7 +222,7 @@ known_devices_poll() {
 }
 
 auth_log_poll() {
-	local window max now cutoff type key count
+	local window max now cutoff type key count origin
 	window="$(number_or "$(setting auth_window 600)" 600)"
 	max="$(number_or "$(setting auth_failures 5)" 5)"
 	[ "$window" -ge 30 ] && [ "$window" -le 86400 ] || window=600
@@ -240,6 +240,9 @@ auth_log_poll() {
 		grep -Fqx "$key" "$STATE/auth-lines" 2>/dev/null && continue
 		printf '%s\n' "$key" >> "$STATE/auth-lines"
 		printf '%s\n' "$now" >> "$STATE/auth-$type"
+		origin="$(printf '%s' "$line" |
+			sed -n 's/.* from \([0-9a-fA-F:.][0-9a-fA-F:.]*\).*/\1/p' | head -n 1)"
+		[ -z "$origin" ] || printf '%s' "$origin" > "$STATE/auth-$type-origin"
 	done
 	[ -e "$STATE/auth-lines" ] && tail -n 300 "$STATE/auth-lines" > "$STATE/auth-lines.new" &&
 		mv -f "$STATE/auth-lines.new" "$STATE/auth-lines"
@@ -251,14 +254,23 @@ auth_log_poll() {
 		[ "$count" -ge "$max" ] || continue
 		if [ ! -f "$STATE/auth-$type-alert" ] ||
 			[ $((now - $(cat "$STATE/auth-$type-alert"))) -ge "$window" ]; then
-			emit "auth.$type.failed" "$count failed $type logins within $window seconds" '' '' "$count" high
+			origin="$(cat "$STATE/auth-$type-origin" 2>/dev/null)"
+			emit "auth.$type.failed" "$count failed $type logins within $window seconds; last source: ${origin:-unknown}" '' '' "$count" high
 			printf '%s' "$now" > "$STATE/auth-$type-alert"
 		fi
 	done
 }
 
+health_threshold() {
+	local key="$1" active="$2" event="$3" description="$4" value="$5" previous
+	previous="$(cat "$STATE/health-$key" 2>/dev/null)"
+	[ "$active" != 1 ] || [ "$previous" = 1 ] ||
+		emit "$event" "$description" '' '' "$value" high
+	printf '%s' "$active" > "$STATE/health-$key"
+}
+
 health_poll() {
-	local temp='' max_temp load max_load mem min_mem disk min_disk mount
+	local temp='' max_temp load max_load mem min_mem disk min_disk mount active
 	for file in /sys/class/thermal/thermal_zone*/temp; do
 		[ -r "$file" ] || continue
 		temp="$(cat "$file" 2>/dev/null)"
@@ -267,25 +279,39 @@ health_poll() {
 		break
 	done
 	max_temp="$(number_or "$(setting cpu_temperature 80)" 80)"
-	[ -z "$temp" ] || [ "$temp" -lt "$max_temp" ] ||
-		emit health.cpu_temp.high "CPU temperature is $temp°C (threshold $max_temp°C)" '' '' "$temp" high
+	if [ -n "$temp" ]; then
+		active=0
+		[ "$temp" -lt "$max_temp" ] || active=1
+		health_threshold cpu_temperature "$active" health.cpu_temp.high \
+			"CPU temperature is $temp°C (threshold $max_temp°C)" "$temp"
+	fi
 
 	load="$(cut -d' ' -f1 /proc/loadavg 2>/dev/null)"
 	max_load="$(number_or "$(setting load_threshold 4)" 4)"
-	awk -v x="$load" -v limit="$max_load" 'BEGIN { exit !(x+0>=limit+0) }' &&
-		emit health.load.high "Load average is $load (threshold $max_load)" '' '' "$load" high
+	active=0
+	awk -v x="$load" -v limit="$max_load" 'BEGIN { exit !(x+0>=limit+0) }' && active=1
+	health_threshold load "$active" health.load.high \
+		"Load average is $load (threshold $max_load)" "$load"
 
 	mem="$(awk '/^MemAvailable:/ {print int($2/1024); exit}' /proc/meminfo 2>/dev/null)"
 	min_mem="$(number_or "$(setting memory_available_mb 32)" 32)"
-	[ -z "$mem" ] || [ "$mem" -gt "$min_mem" ] ||
-		emit health.memory.high "Available memory $mem MiB (threshold $min_mem MiB)" '' '' "$mem" high
+	if [ -n "$mem" ]; then
+		active=0
+		[ "$mem" -gt "$min_mem" ] || active=1
+		health_threshold memory "$active" health.memory.high \
+			"Available memory $mem MiB (threshold $min_mem MiB)" "$mem"
+	fi
 
 	mount="$(setting storage_mount /)"
 	case "$mount" in /*) ;; *) mount=/ ;; esac
 	disk="$(df -Pk "$mount" 2>/dev/null | awk 'NR==2 {print int($4/1024)}')"
 	min_disk="$(number_or "$(setting storage_available_mb 32)" 32)"
-	[ -z "$disk" ] || [ "$disk" -gt "$min_disk" ] ||
-		emit health.storage.low "Available storage $disk MiB at $mount (threshold $min_disk MiB)" '' '' "$disk" high
+	if [ -n "$disk" ]; then
+		active=0
+		[ "$disk" -gt "$min_disk" ] || active=1
+		health_threshold storage "$active" health.storage.low \
+			"Available storage $disk MiB at $mount (threshold $min_disk MiB)" "$disk"
+	fi
 }
 
 summary_poll() {

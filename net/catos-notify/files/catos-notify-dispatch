@@ -243,8 +243,13 @@ publish_event() {
 	json_get_var INTERFACE interface
 	json_get_var DEVICE device
 	case "$EVENT" in ''|*[!a-zA-Z0-9._-]*) json_reply 0 invalid_event; return 1 ;; esac
-	INPUT="$INPUT"
-	message_fields || { json_reply 0 invalid_message; return 1; }
+	# A structured event may intentionally carry only metadata. Matching
+	# rules can generate its entire text through a named template.
+	message_fields || true
+	if [ "${#TITLE}" -gt 512 ] || [ "${#BODY}" -gt 8192 ]; then
+		json_reply 0 invalid_message
+		return 1
+	fi
 	init_run || { json_reply 0 queue_unavailable; return 1; }
 	local section
 	for section in $(sections rule); do
