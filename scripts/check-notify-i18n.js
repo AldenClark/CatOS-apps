@@ -31,7 +31,8 @@ for (const entry of Object.values(menu)) {
 
 const expected = [...source].sort();
 const template = path.join(app, 'po/templates/catos-notify.pot');
-const translations = path.join(app, 'po/zh_Hans/catos-notify.po');
+const translations = path.join(root,
+  'luci/luci-i18n-catos-notify-zh-cn/po/zh_Hans/catos-notify.po');
 const header = 'msgid ""\nmsgstr ""\n' +
   '"Content-Type: text/plain; charset=UTF-8\\n"\n' +
   '"Content-Transfer-Encoding: 8bit\\n"\n';
