@@ -157,5 +157,6 @@ committed=1
 
 info 'Done. Install only the applications you need:'
 printf '  apk add luci-app-catos-notify\n'
+printf '  apk add luci-i18n-catos-notify-zh-cn  # Optional Simplified Chinese\n'
 printf '  apk add luci-app-catos-ddns\n'
 printf '  apk add luci-app-catos-acme\n'

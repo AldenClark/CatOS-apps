@@ -13,7 +13,7 @@ CatOS Apps 提供适用于 OpenWrt 的 APK 签名软件源，包含核心应用�
 | OpenWrt 25.12 系列 | [`feeds/openwrt-25.12/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) | 25.12 SDK |
 | OpenWrt SNAPSHOT | [`feeds/SNAPSHOT/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) | Snapshot SDK |
 
-当前六个软件包均为脚本和资源文件，声明 `PKGARCH=all`，因此**同一 OpenWrt 分支内部**不需要为每种 CPU 架构重复编译。但架构无关不代表 25.12 与 Snapshot 的库 ABI 和运行依赖通用，因此两个签名软件源不混合发布。
+当前七个软件包均为脚本和资源文件，声明 `PKGARCH=all`，因此**同一 OpenWrt 分支内部**不需要为每种 CPU 架构重复编译。但架构无关不代表 25.12 与 Snapshot 的库 ABI 和运行依赖通用，因此两个签名软件源不混合发布。
 
 安装脚本以 `/etc/apk/repositories.d/distfeeds.list` 中的基础软件源为判断依据，不以固件自定义的 `DISTRIB_RELEASE`、`DISTRIB_ARCH`、`apk --print-arch` 或内核版本推测兼容性。例如定制固件报告 `0.8.5-beta`，但实际使用 `/snapshots/packages/aarch64_cortex-a53/base/packages.adb`，就会选择 SNAPSHOT 软件源。依赖仍必须能够从设备现有的兼容软件源解析。
 
@@ -31,6 +31,8 @@ SSH 登录支持的 OpenWrt 设备，以 root 身份执行：
 wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify
 ```
+
+若需要简体中文 LuCI 界面，另外安装 `luci-i18n-catos-notify-zh-cn`。英文为默认语言，无需额外安装英文语言包。
 
 该脚本会安装签名公钥、配置对应分支的软件源，并执行 `apk update`；可重复运行，**不会自动安装软件包**。运行前可以检查脚本源码：[feed.sh](../feed.sh)。脚本要求 APK v3，拒绝意外更换的签名公钥，并在新增配置后 `apk update` 失败时回滚本次改动。
 
@@ -106,7 +108,7 @@ gh secret set CATOS_APK_PRIVATE_KEY \
 1. 进入仓库 **Settings → Pages**，将发布来源设为 **GitHub Actions**。
 2. 确认已配置 `CATOS_APK_PRIVATE_KEY` Secret。
 3. 进入 **Actions → Publish signed APK feed → Run workflow**，从 `main` 分支手动运行。工作流会**同时构建 25.12 与 SNAPSHOT**，不支持只发布其中一个分支。
-4. 检查两套 SDK 构建与 GitHub Pages 部署是否成功。工作流要求每个分支恰好包含六个 CatOS APK，阻止混入其他包，并检查当前软件包仍为架构无关类型。
+4. 检查两套 SDK 构建与 GitHub Pages 部署是否成功。工作流要求每个分支恰好包含七个 CatOS APK，阻止混入其他包，并检查当前软件包仍为架构无关类型。
 5. 访问[公开软件源页面](https://aldenclark.github.io/CatOS-apps/)，验证两个签名索引及支持设备上的 `apk update`，尤其要检查设备现有基础仓库能够满足生成的依赖。
 
 发布采用手动触发。每次成功部署均包含**两个分支的完整产物**，更新 SNAPSHOT 不得意外删除 25.12。如果未来新增原生二进制，再按 CPU 架构增加 SDK 构建和软件源目录。源码 Feed 与 APK 二进制软件源独立维护。

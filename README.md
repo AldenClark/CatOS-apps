@@ -51,9 +51,11 @@ wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && as
 apk add luci-app-catos-notify
 ```
 
+To enable the Simplified Chinese LuCI translation, also install `luci-i18n-catos-notify-zh-cn`. The interface follows the LuCI language setting and defaults to English when no translation is selected.
+
 The script checks for APK v3, identifies the underlying OpenWrt branch from the device's **existing `distfeeds.list`**, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), selects the corresponding [25.12](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) or [SNAPSHOT](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) signed index, and runs `apk update`. It **does not install any application packages**. You can also install `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
 
-All six current APKs contain scripts and resources only (`PKGARCH=all`), so each OpenWrt branch needs one architecture-independent feed rather than per-CPU rebuilds. The branches still use **separate SDK builds** because architecture independence does not guarantee cross-release dependency compatibility. Custom-branded Snapshot firmware is supported when its existing OpenWrt base feeds can satisfy the dependencies. The binary feed does not support `opkg`.
+All seven current APKs contain scripts and resources only (`PKGARCH=all`), so each OpenWrt branch needs one architecture-independent feed rather than per-CPU rebuilds. The branches still use **separate SDK builds** because architecture independence does not guarantee cross-release dependency compatibility. Custom-branded Snapshot firmware is supported when its existing OpenWrt base feeds can satisfy the dependencies. The binary feed does not support `opkg`.
 
 See the [binary feed installation and publishing guide](docs/binary-feed.md). The setup script is published together with each successful **Publish signed APK feed** workflow deployment.
 

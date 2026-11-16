@@ -28,4 +28,9 @@ for app in notify ddns acme; do
   node -e 'const fs=require("fs"); JSON.parse(fs.readFileSync(process.argv[1], "utf8"));' "${acl}"
 done
 
+for view in luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/*.js; do
+  node --check "$view"
+done
+node scripts/check-notify-i18n.js
+
 printf 'Validated 3 core packages and 3 LuCI packages.\n'

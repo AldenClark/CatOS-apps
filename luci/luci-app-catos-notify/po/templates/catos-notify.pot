@@ -1,0 +1,517 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Allowed LAN devices"
+msgstr ""
+
+msgid "Allowed source"
+msgstr ""
+
+msgid "Available templates"
+msgstr ""
+
+msgid "Bark device / WeCom key"
+msgstr ""
+
+msgid "Bot token / API bearer token"
+msgstr ""
+
+msgid "CPU temperature warning (°C)"
+msgstr ""
+
+msgid "CatOS Notify"
+msgstr ""
+
+msgid "Channel"
+msgstr ""
+
+msgid "Channels"
+msgstr ""
+
+msgid "Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups."
+msgstr ""
+
+msgid "Check public IPv4/IPv6"
+msgstr ""
+
+msgid "Choose what triggers a notification and where it is delivered. A disabled rule suppresses its event."
+msgstr ""
+
+msgid "Configure delivery channels first, then select which events should send notifications."
+msgstr ""
+
+msgid "Configure service startup, monitoring, and the HTTP receiver on the Settings page."
+msgstr ""
+
+msgid "Configured channels"
+msgstr ""
+
+msgid "Control service operation, event collection, resource thresholds and the optional HTTP receiver."
+msgstr ""
+
+msgid "Cooldown (seconds)"
+msgstr ""
+
+msgid "Could not queue message: "
+msgstr ""
+
+msgid "Could not queue template: "
+msgstr ""
+
+msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
+msgstr ""
+
+msgid "Critical"
+msgstr ""
+
+msgid "Custom header name"
+msgstr ""
+
+msgid "Custom header value"
+msgstr ""
+
+msgid "Delivered"
+msgstr ""
+
+msgid "Delivery group"
+msgstr ""
+
+msgid "Detect unknown LAN devices"
+msgstr ""
+
+msgid "Device MAC filter"
+msgstr ""
+
+msgid "Device name"
+msgstr ""
+
+msgid "Devices · Monitored device offline"
+msgstr ""
+
+msgid "Devices · Monitored device online"
+msgstr ""
+
+msgid "Devices · Unknown device detected"
+msgstr ""
+
+msgid "DingTalk"
+msgstr ""
+
+msgid "Disabled"
+msgstr ""
+
+msgid "Display name"
+msgstr ""
+
+msgid "Enable HTTP message receiver"
+msgstr ""
+
+msgid "Enable notification service"
+msgstr ""
+
+msgid "Enabled"
+msgstr ""
+
+msgid "Enter a title and message body."
+msgstr ""
+
+msgid "Enter an IP address that responds to probes. Repeated failed checks are required before a device is marked offline."
+msgstr ""
+
+msgid "Event"
+msgstr ""
+
+msgid "Event ID"
+msgstr ""
+
+msgid "Event rules"
+msgstr ""
+
+msgid "Event source filter"
+msgstr ""
+
+msgid "External access (HTTPS required)"
+msgstr ""
+
+msgid "Failed"
+msgstr ""
+
+msgid "Failed login threshold"
+msgstr ""
+
+msgid "Failed login time window (seconds)"
+msgstr ""
+
+msgid "Feishu"
+msgstr ""
+
+msgid "Filesystem checked for low-space alerts."
+msgstr ""
+
+msgid "Generate new token"
+msgstr ""
+
+msgid "Generic Webhook"
+msgstr ""
+
+msgid "HTTP receiver"
+msgstr ""
+
+msgid "Health · High CPU temperature"
+msgstr ""
+
+msgid "Health · High system load"
+msgstr ""
+
+msgid "Health · Low available memory"
+msgstr ""
+
+msgid "Health · Low free storage"
+msgstr ""
+
+msgid "High"
+msgstr ""
+
+msgid "Keep source severity"
+msgstr ""
+
+msgid "Known LAN devices"
+msgstr ""
+
+msgid "Known device probe interval (seconds)"
+msgstr ""
+
+msgid "LAN discovery device"
+msgstr ""
+
+msgid "LAN only"
+msgstr ""
+
+msgid "Load warning threshold"
+msgstr ""
+
+msgid "Login monitoring"
+msgstr ""
+
+msgid "Low"
+msgstr ""
+
+msgid "MAC address"
+msgstr ""
+
+msgid "Maximum delivery attempts"
+msgstr ""
+
+msgid "Maximum queued deliveries"
+msgstr ""
+
+msgid "Message added to the delivery queue."
+msgstr ""
+
+msgid "Message body"
+msgstr ""
+
+msgid "Message templates"
+msgstr ""
+
+msgid "Minimum available memory (MiB)"
+msgstr ""
+
+msgid "Minimum free storage (MiB)"
+msgstr ""
+
+msgid "Minimum time between matching notifications. Set 0 to disable throttling."
+msgstr ""
+
+msgid "Monitor"
+msgstr ""
+
+msgid "Monitored devices"
+msgstr ""
+
+msgid "Network interface filter"
+msgstr ""
+
+msgid "Network monitoring"
+msgstr ""
+
+msgid "No delivery records yet."
+msgstr ""
+
+msgid "Normal"
+msgstr ""
+
+msgid "Notification channels"
+msgstr ""
+
+msgid "Notification rules"
+msgstr ""
+
+msgid "Notification title"
+msgstr ""
+
+msgid "Notify service"
+msgstr ""
+
+msgid "Observes the existing neighbor table; it does not actively scan the LAN."
+msgstr ""
+
+msgid "Off by default. The endpoint is /cgi-bin/catos-notify and uses the existing uhttpd server. No firewall rules are added."
+msgstr ""
+
+msgid "Only optional for LAN access. External access always requires a token, even if this switch is off."
+msgstr ""
+
+msgid "Optional for providers with a built-in endpoint. Use HTTPS for public services."
+msgstr ""
+
+msgid "Optional. Match a specific netifd network interface."
+msgstr ""
+
+msgid "Optional. Match the exact source name supplied by an event publisher."
+msgstr ""
+
+msgid "Override severity"
+msgstr ""
+
+msgid "Overview"
+msgstr ""
+
+msgid "Pending deliveries"
+msgstr ""
+
+msgid "Probe IP address"
+msgstr ""
+
+msgid "Provider"
+msgstr ""
+
+msgid "Provider timeout (seconds)"
+msgstr ""
+
+msgid "Public IP check interval (seconds)"
+msgstr ""
+
+msgid "PushGo channel ID"
+msgstr ""
+
+msgid "PushGo channel password"
+msgstr ""
+
+msgid "Queue full"
+msgstr ""
+
+msgid "Queue message"
+msgstr ""
+
+msgid "Queue test message"
+msgstr ""
+
+msgid "Queued delivery"
+msgstr ""
+
+msgid "Receiver token"
+msgstr ""
+
+msgid "Recent delivery history"
+msgstr ""
+
+msgid "Request failed: "
+msgstr ""
+
+msgid "Requests per minute per IP"
+msgstr ""
+
+msgid "Require authorization"
+msgstr ""
+
+msgid "Resource alerts"
+msgstr ""
+
+msgid "Result"
+msgstr ""
+
+msgid "Router name"
+msgstr ""
+
+msgid "Rules and manual messages target a group, so multiple channels can receive the same event."
+msgstr ""
+
+msgid "Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination."
+msgstr ""
+
+msgid "Security · Repeated LuCI login failures"
+msgstr ""
+
+msgid "Security · Repeated SSH login failures"
+msgstr ""
+
+msgid "Select a built-in event or type an exact custom event ID, such as ddns.updated."
+msgstr ""
+
+msgid "Select the section ID of a message template, usually default or summary."
+msgstr ""
+
+msgid "Send a message"
+msgstr ""
+
+msgid "Send a one-off notification to every enabled channel in the chosen delivery group."
+msgstr ""
+
+msgid "Send test"
+msgstr ""
+
+msgid "Server / webhook URL"
+msgstr ""
+
+msgid "Service"
+msgstr ""
+
+msgid "Service overview"
+msgstr ""
+
+msgid "Service state"
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Space-separated netifd interface names, for example: wan wan6."
+msgstr ""
+
+msgid "Space-separated network device names. Empty uses the LAN discovery device."
+msgstr ""
+
+msgid "Status is temporarily unavailable."
+msgstr ""
+
+msgid "Status summary interval (seconds)"
+msgstr ""
+
+msgid "Storage mountpoint"
+msgstr ""
+
+msgid "System scan interval (seconds)"
+msgstr ""
+
+msgid "System · Periodic status summary"
+msgstr ""
+
+msgid "System · Reboot or shutdown initiated"
+msgstr ""
+
+msgid "System · Startup complete"
+msgstr ""
+
+msgid "Telegram chat ID"
+msgstr ""
+
+msgid "Template ID"
+msgstr ""
+
+msgid "Templates"
+msgstr ""
+
+msgid "Templates define the title and body of notifications. Event rules refer to a template by its section ID."
+msgstr ""
+
+msgid "Test failed: "
+msgstr ""
+
+msgid "Test message"
+msgstr ""
+
+msgid "Test notification delivered."
+msgstr ""
+
+msgid "Test template queued for the default delivery group."
+msgstr ""
+
+msgid "The event ID is the trigger. The delivery group must match a configured channel group. Use the template ID to control the message format."
+msgstr ""
+
+msgid "The latest delivery attempts are stored in memory and cleared when the router restarts."
+msgstr ""
+
+msgid "The summary is delivered only when its event rule is enabled."
+msgstr ""
+
+msgid "Time"
+msgstr ""
+
+msgid "Title"
+msgstr ""
+
+msgid "Token generated. Reload this page to display the updated token."
+msgstr ""
+
+msgid "Token generation failed: "
+msgstr ""
+
+msgid "Track important LAN devices and receive online/offline events when their reachability changes."
+msgstr ""
+
+msgid "Unavailable"
+msgstr ""
+
+msgid "Unknown error"
+msgstr ""
+
+msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
+msgstr ""
+
+msgid "Use {{body}} for the event details and {{router}} for the configured router name."
+msgstr ""
+
+msgid "Used as the {{router}} variable in notification templates."
+msgstr ""
+
+msgid "Uses external IP lookup services. Disable this to stop those external requests."
+msgstr ""
+
+msgid "Variables: {{router}}, {{event}}, {{time}}, {{body}}, {{old}}, {{new}}, {{interface}}. Custom event data fields can also be used."
+msgstr ""
+
+msgid "WAN network interfaces"
+msgstr ""
+
+msgid "WAN · Delegated IPv6 prefix changed"
+msgstr ""
+
+msgid "WAN · Disconnected"
+msgstr ""
+
+msgid "WAN · IPv4 changed"
+msgstr ""
+
+msgid "WAN · IPv6 changed"
+msgstr ""
+
+msgid "WAN · Primary connection changed"
+msgstr ""
+
+msgid "WAN · Public IPv4 changed"
+msgstr ""
+
+msgid "WAN · Public IPv6 changed"
+msgstr ""
+
+msgid "WAN · Restored"
+msgstr ""
+
+msgid "WeCom"
+msgstr ""
+
+msgid "Webhook signing secret"
+msgstr ""
+
+msgid "You must also configure at least one enabled delivery channel and a matching event rule."
+msgstr ""
+
+msgid "e.g. My phone"
+msgstr ""
+
+msgid "ntfy topic"
+msgstr ""

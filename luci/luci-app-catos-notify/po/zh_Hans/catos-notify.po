@@ -1,0 +1,518 @@
+msgid ""
+msgstr ""
+"Language: zh_Hans\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Allowed LAN devices"
+msgstr "允许访问的局域网设备"
+
+msgid "Allowed source"
+msgstr "允许的访问来源"
+
+msgid "Available templates"
+msgstr "可用模板"
+
+msgid "Bark device / WeCom key"
+msgstr "Bark 设备密钥 / 企业微信 Key"
+
+msgid "Bot token / API bearer token"
+msgstr "机器人令牌 / API Bearer 令牌"
+
+msgid "CPU temperature warning (°C)"
+msgstr "CPU 温度告警阈值（°C）"
+
+msgid "CatOS Notify"
+msgstr "CatOS 通知中心"
+
+msgid "Channel"
+msgstr "渠道"
+
+msgid "Channels"
+msgstr "通知渠道"
+
+msgid "Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups."
+msgstr "通知渠道是消息的送达目标。为每个服务商账户或设备创建渠道，再将渠道分配到投递分组。"
+
+msgid "Check public IPv4/IPv6"
+msgstr "检测公网 IPv4/IPv6 地址"
+
+msgid "Choose what triggers a notification and where it is delivered. A disabled rule suppresses its event."
+msgstr "选择触发通知的事件以及投递目标。禁用某条规则后，该规则对应的事件不会发送通知。"
+
+msgid "Configure delivery channels first, then select which events should send notifications."
+msgstr "请先配置通知渠道，再选择需要发送通知的事件。"
+
+msgid "Configure service startup, monitoring, and the HTTP receiver on the Settings page."
+msgstr "可在“设置”页面配置服务启动、事件监测及 HTTP 接收端。"
+
+msgid "Configured channels"
+msgstr "已配置的通知渠道"
+
+msgid "Control service operation, event collection, resource thresholds and the optional HTTP receiver."
+msgstr "配置服务运行、事件采集、资源告警阈值和可选的 HTTP 接收端。"
+
+msgid "Cooldown (seconds)"
+msgstr "冷却时间（秒）"
+
+msgid "Could not queue message: "
+msgstr "消息入队失败："
+
+msgid "Could not queue template: "
+msgstr "模板消息入队失败："
+
+msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
+msgstr "统计近期 SSH 和 LuCI 登录失败次数。开启对应事件规则后才会发送告警。"
+
+msgid "Critical"
+msgstr "严重"
+
+msgid "Custom header name"
+msgstr "自定义请求头名称"
+
+msgid "Custom header value"
+msgstr "自定义请求头内容"
+
+msgid "Delivery group"
+msgstr "投递分组"
+
+msgid "Detect unknown LAN devices"
+msgstr "发现未知局域网设备"
+
+msgid "Device MAC filter"
+msgstr "设备 MAC 地址过滤"
+
+msgid "Device name"
+msgstr "设备名称"
+
+msgid "Devices · Monitored device offline"
+msgstr "设备 · 已监控设备离线"
+
+msgid "Devices · Monitored device online"
+msgstr "设备 · 已监控设备上线"
+
+msgid "Devices · Unknown device detected"
+msgstr "设备 · 发现未知设备"
+
+msgid "DingTalk"
+msgstr "钉钉"
+
+msgid "Disabled"
+msgstr "已禁用"
+
+msgid "Delivered"
+msgstr "投递成功"
+
+msgid "Display name"
+msgstr "显示名称"
+
+msgid "Enable HTTP message receiver"
+msgstr "启用 HTTP 消息接收端"
+
+msgid "Enable notification service"
+msgstr "启用通知服务"
+
+msgid "Enabled"
+msgstr "已启用"
+
+msgid "Enter a title and message body."
+msgstr "请输入标题和消息正文。"
+
+msgid "Enter an IP address that responds to probes. Repeated failed checks are required before a device is marked offline."
+msgstr "请输入能响应探测的 IP 地址。连续多次探测失败后，设备才会被判定为离线。"
+
+msgid "Event"
+msgstr "事件"
+
+msgid "Event ID"
+msgstr "事件 ID"
+
+msgid "Event rules"
+msgstr "事件规则"
+
+msgid "Event source filter"
+msgstr "事件来源过滤"
+
+msgid "External access (HTTPS required)"
+msgstr "允许外部访问（必须使用 HTTPS）"
+
+msgid "Failed login threshold"
+msgstr "登录失败次数阈值"
+
+msgid "Failed"
+msgstr "投递失败"
+
+msgid "Failed login time window (seconds)"
+msgstr "登录失败统计窗口（秒）"
+
+msgid "Feishu"
+msgstr "飞书"
+
+msgid "Filesystem checked for low-space alerts."
+msgstr "用于检测剩余空间不足的文件系统。"
+
+msgid "Generate new token"
+msgstr "生成新令牌"
+
+msgid "Generic Webhook"
+msgstr "通用 Webhook"
+
+msgid "HTTP receiver"
+msgstr "HTTP 接收端"
+
+msgid "Health · High CPU temperature"
+msgstr "资源 · CPU 温度过高"
+
+msgid "Health · High system load"
+msgstr "资源 · 系统负载过高"
+
+msgid "Health · Low available memory"
+msgstr "资源 · 可用内存不足"
+
+msgid "Health · Low free storage"
+msgstr "资源 · 存储空间不足"
+
+msgid "High"
+msgstr "高"
+
+msgid "Keep source severity"
+msgstr "沿用事件原始级别"
+
+msgid "Known LAN devices"
+msgstr "已知局域网设备"
+
+msgid "Known device probe interval (seconds)"
+msgstr "已知设备探测间隔（秒）"
+
+msgid "LAN discovery device"
+msgstr "用于设备发现的 LAN 接口"
+
+msgid "LAN only"
+msgstr "仅局域网"
+
+msgid "Load warning threshold"
+msgstr "系统负载告警阈值"
+
+msgid "Login monitoring"
+msgstr "登录监测"
+
+msgid "Low"
+msgstr "低"
+
+msgid "MAC address"
+msgstr "MAC 地址"
+
+msgid "Maximum delivery attempts"
+msgstr "最大投递尝试次数"
+
+msgid "Maximum queued deliveries"
+msgstr "最大待投递消息数"
+
+msgid "Message added to the delivery queue."
+msgstr "消息已加入投递队列。"
+
+msgid "Message body"
+msgstr "消息正文"
+
+msgid "Message templates"
+msgstr "消息模板"
+
+msgid "Minimum available memory (MiB)"
+msgstr "最低可用内存（MiB）"
+
+msgid "Minimum free storage (MiB)"
+msgstr "最低可用存储空间（MiB）"
+
+msgid "Minimum time between matching notifications. Set 0 to disable throttling."
+msgstr "相同规则两次通知之间的最短间隔。设为 0 则不限制发送频率。"
+
+msgid "Monitor"
+msgstr "监测"
+
+msgid "Monitored devices"
+msgstr "监控设备"
+
+msgid "Network interface filter"
+msgstr "网络接口过滤"
+
+msgid "Network monitoring"
+msgstr "网络监测"
+
+msgid "No delivery records yet."
+msgstr "暂无投递记录。"
+
+msgid "Normal"
+msgstr "普通"
+
+msgid "Notification channels"
+msgstr "通知渠道"
+
+msgid "Notification rules"
+msgstr "通知规则"
+
+msgid "Notification title"
+msgstr "通知标题"
+
+msgid "Notify service"
+msgstr "通知服务"
+
+msgid "Observes the existing neighbor table; it does not actively scan the LAN."
+msgstr "仅观察现有邻居表，不会主动扫描局域网。"
+
+msgid "Off by default. The endpoint is /cgi-bin/catos-notify and uses the existing uhttpd server. No firewall rules are added."
+msgstr "默认关闭。接收地址为 /cgi-bin/catos-notify，使用现有 uhttpd 服务，不会添加防火墙规则。"
+
+msgid "Only optional for LAN access. External access always requires a token, even if this switch is off."
+msgstr "仅在局域网范围内可以选择关闭认证。即使关闭此选项，外部访问仍必须携带令牌。"
+
+msgid "Optional for providers with a built-in endpoint. Use HTTPS for public services."
+msgstr "对于内置默认地址的服务商，此项可留空。访问公网服务时请使用 HTTPS。"
+
+msgid "Optional. Match a specific netifd network interface."
+msgstr "可选。仅匹配指定的 netifd 网络接口。"
+
+msgid "Optional. Match the exact source name supplied by an event publisher."
+msgstr "可选。仅匹配事件发布方指定的准确来源名称。"
+
+msgid "Override severity"
+msgstr "覆盖事件级别"
+
+msgid "Overview"
+msgstr "概览"
+
+msgid "Pending deliveries"
+msgstr "待投递消息"
+
+msgid "Probe IP address"
+msgstr "探测 IP 地址"
+
+msgid "Provider"
+msgstr "服务商"
+
+msgid "Provider timeout (seconds)"
+msgstr "服务商请求超时（秒）"
+
+msgid "Public IP check interval (seconds)"
+msgstr "公网 IP 检测间隔（秒）"
+
+msgid "PushGo channel ID"
+msgstr "PushGo 渠道 ID"
+
+msgid "PushGo channel password"
+msgstr "PushGo 渠道密码"
+
+msgid "Queue full"
+msgstr "投递队列已满"
+
+msgid "Queue message"
+msgstr "加入发送队列"
+
+msgid "Queue test message"
+msgstr "发送模板测试消息"
+
+msgid "Queued delivery"
+msgstr "后台投递"
+
+msgid "Receiver token"
+msgstr "接收端令牌"
+
+msgid "Recent delivery history"
+msgstr "近期投递记录"
+
+msgid "Request failed: "
+msgstr "请求失败："
+
+msgid "Requests per minute per IP"
+msgstr "每个 IP 每分钟最大请求数"
+
+msgid "Require authorization"
+msgstr "要求身份验证"
+
+msgid "Resource alerts"
+msgstr "资源告警"
+
+msgid "Result"
+msgstr "结果"
+
+msgid "Router name"
+msgstr "路由器名称"
+
+msgid "Rules and manual messages target a group, so multiple channels can receive the same event."
+msgstr "事件规则和手动消息按分组投递，因此同一事件可以发送至多个通知渠道。"
+
+msgid "Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination."
+msgstr "新增渠道或修改凭据后，请先点击“保存并应用”再测试。测试通知将直接发送至所选目标。"
+
+msgid "Security · Repeated LuCI login failures"
+msgstr "安全 · LuCI 多次登录失败"
+
+msgid "Security · Repeated SSH login failures"
+msgstr "安全 · SSH 多次登录失败"
+
+msgid "Select a built-in event or type an exact custom event ID, such as ddns.updated."
+msgstr "选择内置事件，或输入准确的自定义事件 ID，例如 ddns.updated。"
+
+msgid "Select the section ID of a message template, usually default or summary."
+msgstr "指定消息模板的配置段 ID，通常为 default 或 summary。"
+
+msgid "Send a message"
+msgstr "发送消息"
+
+msgid "Send a one-off notification to every enabled channel in the chosen delivery group."
+msgstr "向所选分组内所有已启用的通知渠道发送一次性消息。"
+
+msgid "Send test"
+msgstr "发送测试"
+
+msgid "Server / webhook URL"
+msgstr "服务器 / Webhook 地址"
+
+msgid "Service"
+msgstr "服务"
+
+msgid "Service overview"
+msgstr "服务概览"
+
+msgid "Service state"
+msgstr "服务状态"
+
+msgid "Settings"
+msgstr "设置"
+
+msgid "Space-separated netifd interface names, for example: wan wan6."
+msgstr "使用空格分隔 netifd 网络接口名称，例如：wan wan6。"
+
+msgid "Space-separated network device names. Empty uses the LAN discovery device."
+msgstr "使用空格分隔网络设备名称。留空则使用 LAN 设备发现接口。"
+
+msgid "Status is temporarily unavailable."
+msgstr "暂时无法获取服务状态。"
+
+msgid "Status summary interval (seconds)"
+msgstr "状态摘要间隔（秒）"
+
+msgid "Storage mountpoint"
+msgstr "存储挂载点"
+
+msgid "System scan interval (seconds)"
+msgstr "系统扫描间隔（秒）"
+
+msgid "System · Periodic status summary"
+msgstr "系统 · 定期状态摘要"
+
+msgid "System · Reboot or shutdown initiated"
+msgstr "系统 · 开始重启或关机"
+
+msgid "System · Startup complete"
+msgstr "系统 · 启动完成"
+
+msgid "Telegram chat ID"
+msgstr "Telegram 会话 ID"
+
+msgid "Template ID"
+msgstr "模板 ID"
+
+msgid "Templates"
+msgstr "消息模板"
+
+msgid "Templates define the title and body of notifications. Event rules refer to a template by its section ID."
+msgstr "消息模板定义通知的标题和正文。事件规则通过配置段 ID 引用模板。"
+
+msgid "Test failed: "
+msgstr "测试失败："
+
+msgid "Test message"
+msgstr "测试消息"
+
+msgid "Test notification delivered."
+msgstr "测试通知已投递。"
+
+msgid "Test template queued for the default delivery group."
+msgstr "模板测试消息已加入默认分组的投递队列。"
+
+msgid "The event ID is the trigger. The delivery group must match a configured channel group. Use the template ID to control the message format."
+msgstr "事件 ID 决定触发条件；投递分组须与通知渠道的分组一致；模板 ID 决定消息格式。"
+
+msgid "The latest delivery attempts are stored in memory and cleared when the router restarts."
+msgstr "最近的投递尝试记录保存在内存中，路由器重启后会清空。"
+
+msgid "The summary is delivered only when its event rule is enabled."
+msgstr "只有启用相应事件规则后，才会发送状态摘要。"
+
+msgid "Time"
+msgstr "时间"
+
+msgid "Title"
+msgstr "标题"
+
+msgid "Token generated. Reload this page to display the updated token."
+msgstr "令牌已生成。刷新页面以查看更新后的令牌。"
+
+msgid "Token generation failed: "
+msgstr "生成令牌失败："
+
+msgid "Track important LAN devices and receive online/offline events when their reachability changes."
+msgstr "监测重要的局域网设备，在设备连通性发生变化时生成上线或离线事件。"
+
+msgid "Unavailable"
+msgstr "不可用"
+
+msgid "Unknown error"
+msgstr "未知错误"
+
+msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
+msgstr "请通过 X-CatOS-Token 请求头发送此密钥，并妥善保管。"
+
+msgid "Use {{body}} for the event details and {{router}} for the configured router name."
+msgstr "使用 {{body}} 插入事件详情，使用 {{router}} 插入配置的路由器名称。"
+
+msgid "Used as the {{router}} variable in notification templates."
+msgstr "此名称会作为消息模板中的 {{router}} 变量。"
+
+msgid "Uses external IP lookup services. Disable this to stop those external requests."
+msgstr "该功能会请求外部公网 IP 查询服务。关闭后不再发起这些外部请求。"
+
+msgid "Variables: {{router}}, {{event}}, {{time}}, {{body}}, {{old}}, {{new}}, {{interface}}. Custom event data fields can also be used."
+msgstr "可用变量：{{router}}、{{event}}、{{time}}、{{body}}、{{old}}、{{new}}、{{interface}}，以及自定义事件提供的数据字段。"
+
+msgid "WAN network interfaces"
+msgstr "WAN 网络接口"
+
+msgid "WAN · Delegated IPv6 prefix changed"
+msgstr "WAN · 委派的 IPv6 前缀变化"
+
+msgid "WAN · Disconnected"
+msgstr "WAN · 连接断开"
+
+msgid "WAN · IPv4 changed"
+msgstr "WAN · IPv4 地址变化"
+
+msgid "WAN · IPv6 changed"
+msgstr "WAN · IPv6 地址变化"
+
+msgid "WAN · Primary connection changed"
+msgstr "WAN · 主连接切换"
+
+msgid "WAN · Public IPv4 changed"
+msgstr "WAN · 公网 IPv4 地址变化"
+
+msgid "WAN · Public IPv6 changed"
+msgstr "WAN · 公网 IPv6 地址变化"
+
+msgid "WAN · Restored"
+msgstr "WAN · 连接恢复"
+
+msgid "WeCom"
+msgstr "企业微信"
+
+msgid "Webhook signing secret"
+msgstr "Webhook 签名密钥"
+
+msgid "You must also configure at least one enabled delivery channel and a matching event rule."
+msgstr "还需要至少配置一个已启用的通知渠道及匹配的事件规则。"
+
+msgid "e.g. My phone"
+msgstr "例如：我的手机"
+
+msgid "ntfy topic"
+msgstr "ntfy 主题"

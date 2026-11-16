@@ -11,7 +11,7 @@ mkdir -p "$sdk_feed"
 
 packages=(
   catos-notify catos-ddns catos-acme
-  luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+  luci-app-catos-notify luci-i18n-catos-notify-zh-cn luci-app-catos-ddns luci-app-catos-acme
 )
 
 printf 'SDK index fixture\n' > "$sdk_feed/packages.adb"
@@ -22,7 +22,7 @@ done
 bash scripts/assemble-apk-feed.sh "$temp_dir/sdk/bin/packages" "$temp_dir/site" SNAPSHOT
 
 test -s "$temp_dir/site/feeds/SNAPSHOT/all/packages.adb"
-test "$(find "$temp_dir/site/feeds/SNAPSHOT/all" -name '*.apk' | wc -l | tr -d ' ')" -eq 6
+test "$(find "$temp_dir/site/feeds/SNAPSHOT/all" -name '*.apk' | wc -l | tr -d ' ')" -eq 7
 
 # Each OpenWrt release branch must use its own SDK-produced signed index.
 bash scripts/assemble-apk-feed.sh "$temp_dir/sdk/bin/packages" "$temp_dir/site" openwrt-25.12

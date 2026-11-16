@@ -14,10 +14,12 @@ This is an early implementation. Test it on the target OpenWrt release and hardw
 
 ## Configure and start
 
-1. Install `catos-notify` and optionally `luci-app-catos-notify`.
+1. Install `catos-notify` and optionally `luci-app-catos-notify`. To display Simplified Chinese when selected in LuCI, also install `luci-i18n-catos-notify-zh-cn` (English needs no additional package).
 2. Create at least one enabled `channel` in LuCI or `/etc/config/catos_notify`. Set its `group` (default: `default`).
-3. Enable the service in the General tab and click **Save & Apply**.
-4. Test the channel from the Channels section. Save channel changes before sending a test.
+3. Under **Settings → Service**, enable the service and click **Save & Apply**.
+4. Under **Channels**, test the destination. Save channel changes before sending a test.
+
+The LuCI interface is organized into **Overview** (status, recent deliveries and manual messages), **Channels**, **Event rules**, **Templates**, **Monitored devices**, and **Settings** (service, network, login, resource and HTTP receiver settings). Each page works with the same `/etc/config/catos_notify` configuration; the core service also works without LuCI.
 
 From an SSH session:
 
