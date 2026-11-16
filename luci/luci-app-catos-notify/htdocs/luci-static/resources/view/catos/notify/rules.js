@@ -25,6 +25,9 @@ var events = [
 	[ 'system.summary', _('System · Periodic status summary') ]
 ];
 
+var eventLabels = Object.create(null);
+events.forEach(function(item) { eventLabels[item[0]] = item[1]; });
+
 return view.extend({
 	render: function() {
 		var m = new form.Map('catos_notify', _('Event rules'),
@@ -37,10 +40,16 @@ return view.extend({
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
 		o.rmempty = false;
-		o = s.option(form.Value, 'event', _('Event ID'));
+		o = s.option(form.Value, 'event', _('Event'));
 		events.forEach(function(item) { o.value(item[0], item[1]); });
 		o.rmempty = false;
 		o.description = _('Select a built-in event or type an exact custom event ID, such as ddns.updated.');
+		// GridSection normally renders the stored ID (e.g. wan.down).
+		// Show its translated label in the table while keeping the UCI value intact.
+		o.textvalue = function(sectionId) {
+			var id = this.cfgvalue(sectionId);
+			return '%h'.format(eventLabels[id] || id || '');
+		};
 		o = s.option(form.Value, 'group', _('Delivery group'));
 		o.default = 'default';
 		o = s.option(form.Value, 'template', _('Template ID'));

@@ -91,6 +91,46 @@ console.log('CatOS Notify: 20 events, 8 providers, secure defaults and shell/JS 
 NODE
 
 node - <<'NODE'
+const assert = require('assert');
+const fs = require('fs');
+const source = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/rules.js', 'utf8');
+// LuCI supplies String.format(), including %h escaping.
+String.prototype.format = function(value) {
+  return this.replace('%h', String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
+};
+function renderRules(translate) {
+  const options = [];
+  let storedEvent = '';
+  const section = {option(_type, key, title) {
+    const option = {key, title, values: [], value(id, label) { this.values.push([id, label]); }, cfgvalue() { return storedEvent; }};
+    options.push(option);
+    return option;
+  }};
+  const form = {
+    Map: function() { this.section = () => section; this.render = () => options; },
+    GridSection: function(){}, Flag: function(){}, Value: function(){}, ListValue: function(){}
+  };
+  const view = Function('view', 'form', '_', source)({extend: o => o}, form, translate);
+  const result = view.render();
+  return {event: result.find(o => o.key === 'event'), setStoredEvent: id => { storedEvent = id; }};
+}
+const english = renderRules(s => s);
+assert.equal(english.event.title, 'Event', 'Grid column should describe an event, not expose its storage ID');
+for (const [id, label] of english.event.values) {
+  english.setStoredEvent(id);
+  assert.equal(english.event.textvalue('sample'), label, `Missing human-readable event label for ${id}`);
+}
+english.setStoredEvent('ddns.updated');
+assert.equal(english.event.textvalue('sample'), 'ddns.updated', 'Custom event IDs must remain visible');
+english.setStoredEvent('<unsafe.event>');
+assert.equal(english.event.textvalue('sample'), '&lt;unsafe.event&gt;', 'Custom event IDs must be HTML-escaped');
+const chinese = renderRules(s => s === 'WAN · Disconnected' ? 'WAN · 连接断开' : s);
+chinese.setStoredEvent('wan.down');
+assert.equal(chinese.event.textvalue('sample'), 'WAN · 连接断开', 'Grid label must follow LuCI language');
+console.log('CatOS Notify: all event IDs display translated labels while retaining raw UCI IDs.');
+NODE
+
+node - <<'NODE'
 const fs = require('fs');
 const assert = require('assert');
 const app = 'luci/luci-app-catos-notify';

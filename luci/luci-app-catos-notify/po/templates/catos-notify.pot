@@ -129,9 +129,6 @@ msgstr ""
 msgid "Event"
 msgstr ""
 
-msgid "Event ID"
-msgstr ""
-
 msgid "Event rules"
 msgstr ""
 

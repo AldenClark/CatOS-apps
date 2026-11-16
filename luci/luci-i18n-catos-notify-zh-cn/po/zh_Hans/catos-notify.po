@@ -130,9 +130,6 @@ msgstr "请输入能响应探测的 IP 地址。连续多次探测失败后，�
 msgid "Event"
 msgstr "事件"
 
-msgid "Event ID"
-msgstr "事件 ID"
-
 msgid "Event rules"
 msgstr "事件规则"
 
