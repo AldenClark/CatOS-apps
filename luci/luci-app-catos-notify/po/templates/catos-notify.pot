@@ -3,13 +3,19 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "A channel may be included in multiple groups. A group with no channels cannot deliver messages."
+msgstr ""
+
+msgid "A delivery group contains one or more channels. Manage membership here; channels themselves do not belong to any default group."
+msgstr ""
+
 msgid "Allowed LAN devices"
 msgstr ""
 
 msgid "Allowed source"
 msgstr ""
 
-msgid "Available templates"
+msgid "Available variables for this event"
 msgstr ""
 
 msgid "Bark device / WeCom key"
@@ -27,16 +33,22 @@ msgstr ""
 msgid "Channel"
 msgstr ""
 
-msgid "Channels"
+msgid "Channel not found. Save & Apply before testing."
 msgstr ""
 
-msgid "Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups."
+msgid "Channel: "
+msgstr ""
+
+msgid "Channels"
 msgstr ""
 
 msgid "Check public IPv4/IPv6"
 msgstr ""
 
-msgid "Choose what triggers a notification and where it is delivered. A disabled rule suppresses its event."
+msgid "Choose channels and/or groups under Delivery. If a channel is selected both directly and through a group, it receives one message."
+msgstr ""
+
+msgid "Configure a delivery destination here. Delivery groups maintain their own channel membership."
 msgstr ""
 
 msgid "Configure delivery channels first, then select which events should send notifications."
@@ -48,6 +60,9 @@ msgstr ""
 msgid "Configured channels"
 msgstr ""
 
+msgid "Configured delivery groups"
+msgstr ""
+
 msgid "Control service operation, event collection, resource thresholds and the optional HTTP receiver."
 msgstr ""
 
@@ -55,9 +70,6 @@ msgid "Cooldown (seconds)"
 msgstr ""
 
 msgid "Could not queue message: "
-msgstr ""
-
-msgid "Could not queue template: "
 msgstr ""
 
 msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
@@ -75,7 +87,13 @@ msgstr ""
 msgid "Delivered"
 msgstr ""
 
-msgid "Delivery group"
+msgid "Delivery"
+msgstr ""
+
+msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
+msgstr ""
+
+msgid "Delivery groups"
 msgstr ""
 
 msgid "Detect unknown LAN devices"
@@ -105,6 +123,12 @@ msgstr ""
 msgid "Display name"
 msgstr ""
 
+msgid "Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing."
+msgstr ""
+
+msgid "Each rule selects an event, its destinations and its own message template. No destination is selected automatically."
+msgstr ""
+
 msgid "Enable HTTP message receiver"
 msgstr ""
 
@@ -121,9 +145,6 @@ msgid "Enter an IP address that responds to probes. Repeated failed checks are r
 msgstr ""
 
 msgid "Event"
-msgstr ""
-
-msgid "Event ID"
 msgstr ""
 
 msgid "Event rules"
@@ -154,6 +175,12 @@ msgid "Generate new token"
 msgstr ""
 
 msgid "Generic Webhook"
+msgstr ""
+
+msgid "Group name"
+msgstr ""
+
+msgid "Group: "
 msgstr ""
 
 msgid "HTTP receiver"
@@ -207,13 +234,16 @@ msgstr ""
 msgid "Maximum queued deliveries"
 msgstr ""
 
+msgid "Member channels"
+msgstr ""
+
 msgid "Message added to the delivery queue."
 msgstr ""
 
 msgid "Message body"
 msgstr ""
 
-msgid "Message templates"
+msgid "Message body template"
 msgstr ""
 
 msgid "Minimum available memory (MiB)"
@@ -223,6 +253,12 @@ msgid "Minimum free storage (MiB)"
 msgstr ""
 
 msgid "Minimum time between matching notifications. Set 0 to disable throttling."
+msgstr ""
+
+msgid "Missing channel: "
+msgstr ""
+
+msgid "Missing destination: "
 msgstr ""
 
 msgid "Monitor"
@@ -237,10 +273,19 @@ msgstr ""
 msgid "Network monitoring"
 msgstr ""
 
+msgid "No channels or groups configured. Add a channel first."
+msgstr ""
+
 msgid "No delivery records yet."
 msgstr ""
 
+msgid "No member channels"
+msgstr ""
+
 msgid "Normal"
+msgstr ""
+
+msgid "Not configured"
 msgstr ""
 
 msgid "Notification channels"
@@ -306,9 +351,6 @@ msgstr ""
 msgid "Queue message"
 msgstr ""
 
-msgid "Queue test message"
-msgstr ""
-
 msgid "Queued delivery"
 msgstr ""
 
@@ -336,10 +378,7 @@ msgstr ""
 msgid "Router name"
 msgstr ""
 
-msgid "Rules and manual messages target a group, so multiple channels can receive the same event."
-msgstr ""
-
-msgid "Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination."
+msgid "Save & Apply before testing new channels or changed credentials."
 msgstr ""
 
 msgid "Security · Repeated LuCI login failures"
@@ -351,13 +390,19 @@ msgstr ""
 msgid "Select a built-in event or type an exact custom event ID, such as ddns.updated."
 msgstr ""
 
-msgid "Select the section ID of a message template, usually default or summary."
+msgid "Select any number of delivery groups and individual channels. An empty selection means this rule does not deliver."
+msgstr ""
+
+msgid "Select at least one delivery destination."
+msgstr ""
+
+msgid "Select one or more destinations. Channels included through multiple selections receive only one copy."
 msgstr ""
 
 msgid "Send a message"
 msgstr ""
 
-msgid "Send a one-off notification to every enabled channel in the chosen delivery group."
+msgid "Send a one-off notification to explicitly selected channels and delivery groups."
 msgstr ""
 
 msgid "Send test"
@@ -408,15 +453,6 @@ msgstr ""
 msgid "Telegram chat ID"
 msgstr ""
 
-msgid "Template ID"
-msgstr ""
-
-msgid "Templates"
-msgstr ""
-
-msgid "Templates define the title and body of notifications. Event rules refer to a template by its section ID."
-msgstr ""
-
 msgid "Test failed: "
 msgstr ""
 
@@ -426,16 +462,13 @@ msgstr ""
 msgid "Test notification delivered."
 msgstr ""
 
-msgid "Test template queued for the default delivery group."
-msgstr ""
-
-msgid "The event ID is the trigger. The delivery group must match a configured channel group. Use the template ID to control the message format."
-msgstr ""
-
 msgid "The latest delivery attempts are stored in memory and cleared when the router restarts."
 msgstr ""
 
 msgid "The summary is delivered only when its event rule is enabled."
+msgstr ""
+
+msgid "This title template belongs only to this event rule."
 msgstr ""
 
 msgid "Time"
@@ -462,16 +495,13 @@ msgstr ""
 msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
 msgstr ""
 
-msgid "Use {{body}} for the event details and {{router}} for the configured router name."
+msgid "Use {{body}} for the event details. Extra flat variables from the event data are also available."
 msgstr ""
 
 msgid "Used as the {{router}} variable in notification templates."
 msgstr ""
 
 msgid "Uses external IP lookup services. Disable this to stop those external requests."
-msgstr ""
-
-msgid "Variables: {{router}}, {{event}}, {{time}}, {{body}}, {{old}}, {{new}}, {{interface}}. Custom event data fields can also be used."
 msgstr ""
 
 msgid "WAN network interfaces"
@@ -508,6 +538,9 @@ msgid "Webhook signing secret"
 msgstr ""
 
 msgid "You must also configure at least one enabled delivery channel and a matching event rule."
+msgstr ""
+
+msgid "e.g. Administrator devices"
 msgstr ""
 
 msgid "e.g. My phone"

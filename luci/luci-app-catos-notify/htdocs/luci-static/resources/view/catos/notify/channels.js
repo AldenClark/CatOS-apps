@@ -3,6 +3,7 @@
 'require form';
 'require rpc';
 'require ui';
+'require uci';
 
 var testChannel = rpc.declare({
 	object: 'catos.notify',
@@ -14,14 +15,27 @@ var testChannel = rpc.declare({
 return view.extend({
 	render: function() {
 		var m = new form.Map('catos_notify', _('Notification channels'),
-			_('Channels are delivery destinations. Create a channel for each provider account or device, then assign channels to delivery groups.'));
+			_('Configure a delivery destination here. Delivery groups maintain their own channel membership.'));
 		var s = m.section(form.GridSection, 'channel', _('Configured channels'));
 		s.addremove = true;
 		s.anonymous = true;
-		s.description = _('Save & Apply before testing a new channel or changed credentials. Testing sends directly to the selected destination.');
+		s.description = _('Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing.');
+		// LuCI normally creates anonymous @channel[index] sections. Such indices
+		// shift when a different channel is removed, potentially misrouting
+		// notifications. Create named UCI sections without asking for IDs.
+		var originalAdd = s.handleAdd;
+		s.handleAdd = function(ev) {
+			var id;
+			do {
+				id = 'channel_' + Date.now().toString(36) + '_' +
+					Math.random().toString(36).slice(2, 10);
+			} while (this.map.data.get('catos_notify', id) != null);
+			return originalAdd.call(this, ev, id);
+		};
 
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
 		o.default = '1';
+		o.rmempty = false;
 
 		o = s.option(form.Value, 'name', _('Display name'));
 		o.rmempty = false;
@@ -35,10 +49,6 @@ return view.extend({
 			[ 'webhook', _('Generic Webhook') ]
 		].forEach(function(type) { o.value(type[0], type[1]); });
 		o.rmempty = false;
-
-		o = s.option(form.Value, 'group', _('Delivery group'));
-		o.default = 'default';
-		o.description = _('Rules and manual messages target a group, so multiple channels can receive the same event.');
 
 		o = s.option(form.Value, 'url', _('Server / webhook URL'));
 		o.modalonly = true;
@@ -91,13 +101,30 @@ return view.extend({
 
 		o = s.option(form.Button, '_test', _('Send test'));
 		o.inputstyle = 'apply';
+		// Only offer testing in the channel list, after leaving the edit modal.
+		// The backend reads committed UCI; staged changes must be applied first.
+		o.modalonly = false;
 		o.onclick = function(ev, sectionId) {
-			return testChannel(sectionId, 'CatOS Notify test', 'This is a test notification.')
+			return uci.changes().then(function(changes) {
+				if (changes.catos_notify && changes.catos_notify.length) {
+					ui.addNotification(null, E('p', {},
+						_('Save & Apply before testing new channels or changed credentials.')),
+						'warning');
+					return;
+				}
+				return testChannel(sectionId, 'CatOS Notify test', 'This is a test notification.');
+			})
 				.then(function(result) {
+					if (!result) return;
 					var ok = result && (result.ok === true || result.ok === 1);
+					var failures = {
+						channel_unknown: _('Channel not found. Save & Apply before testing.'),
+						delivery_failed: _('Delivery failed. Check the provider URL, credentials and network connectivity.')
+					};
+					var message = result && result.message;
 					ui.addNotification(null, E('p', {}, ok
 						? _('Test notification delivered.')
-						: _('Test failed: ') + (result && result.message || _('Unknown error'))),
+						: _('Test failed: ') + (failures[message] || message || _('Unknown error'))),
 						ok ? 'info' : 'danger');
 				})
 				.catch(function(err) {

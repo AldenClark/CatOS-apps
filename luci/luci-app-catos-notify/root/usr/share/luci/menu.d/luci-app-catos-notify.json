@@ -15,15 +15,15 @@
     "order": 20,
     "action": { "type": "view", "path": "catos/notify/channels" }
   },
+  "admin/services/catos-notify/groups": {
+    "title": "Delivery groups",
+    "order": 30,
+    "action": { "type": "view", "path": "catos/notify/groups" }
+  },
   "admin/services/catos-notify/rules": {
     "title": "Event rules",
-    "order": 30,
-    "action": { "type": "view", "path": "catos/notify/rules" }
-  },
-  "admin/services/catos-notify/templates": {
-    "title": "Templates",
     "order": 40,
-    "action": { "type": "view", "path": "catos/notify/templates" }
+    "action": { "type": "view", "path": "catos/notify/rules" }
   },
   "admin/services/catos-notify/devices": {
     "title": "Monitored devices",
