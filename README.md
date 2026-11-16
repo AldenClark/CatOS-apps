@@ -44,16 +44,16 @@ Use an SDK matching the target OpenWrt release and architecture. OpenWrt 24.10 p
 
 ## Signed APK binary feed
 
-The repository includes an independently signed binary feed publishing workflow for OpenWrt 25.12.6. On a supported OpenWrt device, connect over SSH as root and run:
+The repository publishes two independently built, signed APK feeds for **OpenWrt 25.12** and **SNAPSHOT**. On a supported OpenWrt device, connect over SSH as root and run:
 
 ```sh
 wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify
 ```
 
-The setup script checks for APK v3, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), adds the [universal signed index](https://aldenclark.github.io/CatOS-apps/universal/packages.adb), and runs `apk update`. The universal feed contains only architecture-independent packages. It **does not install any application packages**. You can also install only `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
+The script checks for APK v3, identifies the underlying OpenWrt branch from the device's **existing `distfeeds.list`**, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), selects the corresponding [25.12](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) or [SNAPSHOT](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) signed index, and runs `apk update`. It **does not install any application packages**. You can also install `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
 
-The universal feed supports compatible OpenWrt-based firmware with APK v3, including snapshots with custom firmware version strings, provided their runtime dependencies can be resolved. Release-specific feed snapshots continue to be published for OpenWrt 25.12.6 (`x86_64`, `aarch64_generic`, and `mips_24kc`). The binary feed is not compatible with `opkg`.
+All six current APKs contain scripts and resources only (`PKGARCH=all`), so each OpenWrt branch needs one architecture-independent feed rather than per-CPU rebuilds. The branches still use **separate SDK builds** because architecture independence does not guarantee cross-release dependency compatibility. Custom-branded Snapshot firmware is supported when its existing OpenWrt base feeds can satisfy the dependencies. The binary feed does not support `opkg`.
 
 See the [binary feed installation and publishing guide](docs/binary-feed.md). The setup script is published together with each successful **Publish signed APK feed** workflow deployment.
 

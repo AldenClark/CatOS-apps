@@ -15,19 +15,18 @@
     <main>
       <h1>CatOS Apps</h1>
       <p>Signed APK package repositories for CatOS applications on OpenWrt.</p>
-      <p>The universal signed feed supports compatible OpenWrt-based firmware with APK v3, including custom-version snapshots, subject to runtime dependency compatibility.</p>
+      <p>Signed package feeds for OpenWrt 25.12 and SNAPSHOT are built independently with matching SDKs. Packages currently contain only architecture-independent scripts and resources.</p>
       <h2>Quick setup</h2>
       <p>Connect to your OpenWrt device over SSH and run:</p>
       <pre><code>wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh &amp;&amp; ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify</code></pre>
-      <p>The script adds the <a href="universal/packages.adb">universal signed APK repository</a> and its public key; it does not install application packages.</p>
-      <p>Release-specific repositories for OpenWrt 25.12.6:</p>
-      <p>Download the <a href="keys/catos-apk.pem">APK repository public key</a> and select the repository index matching your system:</p>
+      <p>The script detects the userspace branch from the router's existing <code>distfeeds.list</code>, adds the appropriate signed repository and its public key, and does not install packages.</p>
+      <p>Available OpenWrt package channels:</p>
       <ul>
-        <li><a href="releases/25.12.6/x86_64/packages.adb">OpenWrt 25.12.6 · x86_64</a></li>
-        <li><a href="releases/25.12.6/aarch64_generic/packages.adb">OpenWrt 25.12.6 · aarch64_generic</a></li>
-        <li><a href="releases/25.12.6/mips_24kc/packages.adb">OpenWrt 25.12.6 · mips_24kc</a></li>
+        <li><a href="feeds/openwrt-25.12/all/packages.adb">OpenWrt 25.12 · architecture-independent</a></li>
+        <li><a href="feeds/SNAPSHOT/all/packages.adb">OpenWrt SNAPSHOT · architecture-independent</a></li>
       </ul>
+      <p><a href="keys/catos-apk.pem">Download the signing public key</a>. Custom-branded firmware must use compatible OpenWrt base repositories.</p>
       <p>See the <a href="https://github.com/AldenClark/CatOS-apps/blob/main/docs/binary-feed.md">installation guide</a> and <a href="https://github.com/AldenClark/CatOS-apps">source repository</a>.</p>
       <p><strong>Development status:</strong> CatOS Notify has an initial implementation awaiting validation on supported devices. CatOS DDNS and CatOS ACME remain early package skeletons. These packages are not yet production-ready.</p>
     </main>

@@ -2,13 +2,6 @@ name: Publish signed APK feed
 
 on:
   workflow_dispatch:
-    inputs:
-      openwrt_version:
-        description: OpenWrt release for the binary repository
-        required: true
-        type: choice
-        options:
-          - '25.12.6'
 
 permissions:
   contents: read
@@ -19,19 +12,20 @@ concurrency:
 
 jobs:
   build:
-    name: Build ${{ matrix.architecture }}
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.channel }} (architecture-independent APKs)
+    runs-on: ubuntu-24.04
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
-        architecture:
-          - x86_64
-          - aarch64_generic
-          - mips_24kc
+        include:
+          - channel: openwrt-25.12
+            sdk: aarch64_cortex-a53-openwrt-25.12
+          - channel: SNAPSHOT
+            sdk: aarch64_cortex-a53-SNAPSHOT
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Prepare SDK output directory
         run: mkdir -p artifacts
@@ -53,7 +47,7 @@ jobs:
       - name: Build and sign CatOS feed with OpenWrt SDK
         uses: openwrt/gh-action-sdk@f5813d30eeef3534b58ac7e79c5d8842b6035434
         env:
-          ARCH: ${{ matrix.architecture }}-${{ inputs.openwrt_version }}
+          ARCH: ${{ matrix.sdk }}
           FEEDNAME: catos
           PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
           INDEX: '1'
@@ -65,13 +59,12 @@ jobs:
           bash scripts/assemble-apk-feed.sh \
             artifacts/bin/packages \
             site-dist \
-            '${{ inputs.openwrt_version }}' \
-            '${{ matrix.architecture }}'
+            '${{ matrix.channel }}'
 
-      - name: Upload architecture feed
-        uses: actions/upload-artifact@v4
+      - name: Upload channel feed
+        uses: actions/upload-artifact@v7
         with:
-          name: catos-apk-${{ inputs.openwrt_version }}-${{ matrix.architecture }}
+          name: catos-apk-${{ matrix.channel }}
           path: site-dist/
           if-no-files-found: error
           retention-days: 7
@@ -79,7 +72,7 @@ jobs:
   publish:
     name: Deploy signed feed to GitHub Pages
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     permissions:
       contents: read
@@ -90,12 +83,12 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Check out source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - name: Download all architecture feeds
-        uses: actions/download-artifact@v4
+      - name: Download both OpenWrt channel feeds
+        uses: actions/download-artifact@v8
         with:
-          pattern: catos-apk-${{ inputs.openwrt_version }}-*
+          pattern: catos-apk-*
           path: site-dist/
           merge-multiple: true
 
@@ -104,21 +97,18 @@ jobs:
           CATOS_APK_PRIVATE_KEY: ${{ secrets.CATOS_APK_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          for arch in x86_64 aarch64_generic mips_24kc; do
-            feed_dir="site-dist/releases/${{ inputs.openwrt_version }}/$arch"
+          for channel in openwrt-25.12 SNAPSHOT; do
+            feed_dir="site-dist/feeds/$channel/all"
             test -s "$feed_dir/packages.adb"
             (cd "$feed_dir" && sha256sum --check SHA256SUMS)
           done
 
-          # These six packages must remain pure scripts/resources for a
-          # cross-firmware feed. A future native package needs its own target.
+          # Architecture independence is valid only within the SDK's OpenWrt
+          # branch. Native packages require additional architecture feeds.
           for app in notify ddns acme; do
             grep -Eq '^[[:space:]]*PKGARCH:=all$' "net/catos-$app/Makefile"
             grep -Eq '^[[:space:]]*LUCI_PKGARCH:=all$' "luci/luci-app-catos-$app/Makefile"
           done
-          mkdir -p site-dist/universal
-          cp -a site-dist/releases/${{ inputs.openwrt_version }}/aarch64_generic/. site-dist/universal/
-          (cd site-dist/universal && sha256sum --check SHA256SUMS)
 
           mkdir -p site-dist/keys
           printf '%s\n' "$CATOS_APK_PRIVATE_KEY" | openssl pkey -pubout -out site-dist/keys/catos-apk.pem
@@ -133,13 +123,13 @@ jobs:
           openssl pkey -pubin -in site-dist/keys/catos-apk.pem -outform DER | sha256sum
 
       - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       - name: Upload GitHub Pages content
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site-dist/
 
       - name: Deploy GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

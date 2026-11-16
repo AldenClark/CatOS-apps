@@ -44,16 +44,16 @@ make package/feeds/catos/catos-notify/compile V=s
 
 ## 已签名 APK 二进制软件源
 
-本仓库包含面向 OpenWrt 25.12.6 的 APK 软件源构建、签名及发布工作流。在支持的 OpenWrt 设备上，以 root 身份通过 SSH 执行：
+本仓库分别构建、签名并发布面向 **OpenWrt 25.12** 和 **SNAPSHOT** 的两个 APK 软件源。在支持的 OpenWrt 设备上，以 root 身份通过 SSH 执行：
 
 ```sh
 wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify
 ```
 
-安装脚本会检查 APK v3、下载[软件源公钥](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem)，配置[通用签名软件源](https://aldenclark.github.io/CatOS-apps/universal/packages.adb)，并执行 `apk update`。通用源仅包含架构无关的软件包，脚本**不会自动安装任何应用软件包**。如不需要 LuCI，也可以单独安装 `catos-notify`、`catos-ddns` 或 `catos-acme`。
+安装脚本会检查 APK v3，根据设备**现有的 `distfeeds.list`** 识别 OpenWrt 软件包分支，下载[软件源公钥](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem)，选择对应的 [25.12](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) 或 [SNAPSHOT](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) 签名源，然后执行 `apk update`。脚本**不会自动安装应用软件包**。如不需要 LuCI，也可以单独安装 `catos-notify`、`catos-ddns` 或 `catos-acme`。
 
-通用源面向使用 APK v3、且能够满足运行依赖的 OpenWrt 及兼容固件，包括采用自定义版本号的 Snapshot。原有 OpenWrt 25.12.6 专用源仍继续提供 `x86_64`、`aarch64_generic` 和 `mips_24kc` 三种架构。二进制软件源不适用于 `opkg`。
+当前六个 APK 均为纯脚本及资源（`PKGARCH=all`），每个 OpenWrt 分支只需一套与 CPU 架构无关的软件包；**不同 OpenWrt 分支仍使用独立 SDK 构建**，不能把架构无关误认为跨版本依赖兼容。采用自定义版本号的 Snapshot 固件也可依据其现有官方软件源识别分支，前提是运行依赖能够解析。二进制软件源不适用于 `opkg`。
 
 参见[APK 软件源安装与发布说明](docs/binary-feed.zh-CN.md)。安装脚本会随每次成功运行的 **Publish signed APK feed** 工作流同步发布。
 
