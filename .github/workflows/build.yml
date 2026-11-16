@@ -42,7 +42,7 @@ jobs:
         env:
           ARCH: ${{ inputs.architecture }}-${{ inputs.openwrt_version }}
           FEEDNAME: catos
-          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-i18n-catos-notify-zh-cn luci-app-catos-ddns luci-app-catos-acme
           ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
 
       - name: Upload compiled packages

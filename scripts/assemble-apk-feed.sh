@@ -28,6 +28,7 @@ packages=(
   catos-ddns
   catos-acme
   luci-app-catos-notify
+  luci-i18n-catos-notify-zh-cn
   luci-app-catos-ddns
   luci-app-catos-acme
 )
@@ -53,7 +54,7 @@ while IFS= read -r -d '' index; do
 done < <(find "$source_dir" -type f -name packages.adb -print0)
 
 if [[ ${#matches[@]} -ne 1 ]]; then
-  printf 'Expected exactly one SDK feed containing all six CatOS APKs, found %s.\n' "${#matches[@]}" >&2
+  printf 'Expected exactly one SDK feed containing all seven CatOS APKs, found %s.\n' "${#matches[@]}" >&2
   exit 1
 fi
 
@@ -62,7 +63,7 @@ package_dir="${matches[0]}"
 # Fail closed: do not accidentally publish packages from OpenWrt's other feeds.
 archives=("$package_dir"/*.apk)
 if [[ ${#archives[@]} -ne ${#packages[@]} ]]; then
-  printf 'SDK feed has %s APKs; expected only the six CatOS packages.\n' "${#archives[@]}" >&2
+  printf 'SDK feed has %s APKs; expected only the seven CatOS packages.\n' "${#archives[@]}" >&2
   exit 1
 fi
 

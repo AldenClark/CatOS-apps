@@ -49,7 +49,7 @@ jobs:
         env:
           ARCH: ${{ matrix.sdk }}
           FEEDNAME: catos
-          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-i18n-catos-notify-zh-cn luci-app-catos-ddns luci-app-catos-acme
           INDEX: '1'
           PRIVATE_KEY: ${{ secrets.CATOS_APK_PRIVATE_KEY }}
           ARTIFACTS_DIR: ${{ github.workspace }}/artifacts

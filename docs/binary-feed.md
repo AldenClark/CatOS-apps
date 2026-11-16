@@ -13,7 +13,7 @@ The packages are built **separately** against two OpenWrt userspace branches:
 | 25.12 series | [`feeds/openwrt-25.12/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/openwrt-25.12/all/packages.adb) | OpenWrt 25.12 SDK |
 | SNAPSHOT | [`feeds/SNAPSHOT/all/packages.adb`](https://aldenclark.github.io/CatOS-apps/feeds/SNAPSHOT/all/packages.adb) | OpenWrt Snapshot SDK |
 
-Currently, all six packages contain only scripts and resources and are declared `PKGARCH=all`, so **each branch supports multiple CPU architectures without duplicate builds**. Architecture independence does **not** imply ABI or runtime dependency compatibility between 25.12 and SNAPSHOT; therefore, the two signed feeds are never combined.
+Currently, all seven packages contain only scripts and resources and are declared `PKGARCH=all`, so **each branch supports multiple CPU architectures without duplicate builds**. Architecture independence does **not** imply ABI or runtime dependency compatibility between 25.12 and SNAPSHOT; therefore, the two signed feeds are never combined.
 
 The installation script detects the branch from `/etc/apk/repositories.d/distfeeds.list`, not from the firmware's custom `DISTRIB_RELEASE`, `DISTRIB_ARCH`, `apk --print-arch`, or kernel version. For example, a custom firmware reporting `0.8.5-beta` but using `/snapshots/packages/aarch64_cortex-a53/base/packages.adb` selects the SNAPSHOT feed. Its dependencies still need to be resolvable from its existing base repositories.
 
@@ -31,6 +31,8 @@ Connect to a supported OpenWrt device over SSH as root, then run:
 wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify
 ```
+
+Install `luci-i18n-catos-notify-zh-cn` for the optional Simplified Chinese LuCI interface. The default English text needs no separate language package.
 
 The script configures the signing key, selects the appropriate branch-specific signed index, and runs `apk update`. It is safe to run repeatedly and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). It requires APK v3, refuses unexpected signing-key changes, and rolls back newly made configuration changes when `apk update` fails.
 
@@ -106,7 +108,7 @@ Never commit, attach, print, or distribute the private key. The publishing workf
 1. In repository **Settings → Pages**, choose **GitHub Actions** as the publishing source.
 2. Confirm that the `CATOS_APK_PRIVATE_KEY` Actions secret is configured.
 3. In **Actions → Publish signed APK feed → Run workflow**, run the workflow from the `main` branch. It builds **both** the 25.12 and SNAPSHOT channels; there is no single-channel deployment.
-4. Verify that both SDK builds and the GitHub Pages deployment succeeded. The workflow requires exactly six CatOS APKs per channel and rejects unrelated packages. It also requires all current packages to remain architecture-independent.
+4. Verify that both SDK builds and the GitHub Pages deployment succeeded. The workflow requires exactly seven CatOS APKs per channel and rejects unrelated packages. It also requires all current packages to remain architecture-independent.
 5. Verify the [public landing page](https://aldenclark.github.io/CatOS-apps/), both signed APK indexes, and `apk update` on a suitable device. In particular, validate that the device's current base repositories can satisfy the generated dependencies.
 
 Publishing is manual. Every successful deployment contains **both** channel feeds; a SNAPSHOT refresh must not remove 25.12 packages. If native binaries are added later, introduce separate CPU architecture builds and indexes. The repository's Git source feed remains available independently.

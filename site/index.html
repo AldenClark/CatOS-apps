@@ -20,6 +20,7 @@
       <p>Connect to your OpenWrt device over SSH and run:</p>
       <pre><code>wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh &amp;&amp; ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify</code></pre>
+      <p>Optional Simplified Chinese interface: <code>apk add luci-i18n-catos-notify-zh-cn</code>. The interface follows the LuCI language setting; English is the default.</p>
       <p>The script detects the userspace branch from the router's existing <code>distfeeds.list</code>, adds the appropriate signed repository and its public key, and does not install packages.</p>
       <p>Available OpenWrt package channels:</p>
       <ul>
