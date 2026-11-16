@@ -15,6 +15,14 @@ node - "$core/catos_notify.config" "$ui" "$core/catos-notify-providers" <<'NODE'
 const fs = require('fs');
 const assert = require('assert');
 const [config, ui, provider] = process.argv.slice(2).map(p => fs.readFileSync(p, 'utf8'));
+// UCI section names are unique across *all* section types. A template and a
+// rule both called "summary" cause rpcd uci/get to fail with ubus code 9.
+const sectionNames = new Set();
+for (const match of config.matchAll(/^\s*config\s+\S+\s+(['"])([^'"]+)\1\s*$/gm)) {
+  const name = match[2];
+  assert(!sectionNames.has(name), 'Duplicate UCI section name: ' + name);
+  sectionNames.add(name);
+}
 const events = [
   'wan.down', 'wan.up', 'wan.ipv4.changed', 'wan.ipv6.changed',
   'wan.prefix.changed', 'public.ipv4.changed', 'public.ipv6.changed',
