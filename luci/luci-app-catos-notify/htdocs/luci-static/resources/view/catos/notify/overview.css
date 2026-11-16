@@ -1,0 +1,61 @@
+/* The one-off message composer is independent of theme-specific CBI form grids. */
+.catos-notify-compose {
+	display: grid;
+	gap: 16px;
+	max-width: 920px;
+	width: 100%;
+	margin-top: 16px;
+}
+
+.catos-notify-compose-row {
+	display: grid;
+	grid-template-columns: 160px minmax(0, 1fr);
+	column-gap: 20px;
+	align-items: start;
+}
+
+.catos-notify-compose-label {
+	display: block;
+	padding-top: 9px;
+	text-align: right;
+}
+
+.catos-notify-compose-control {
+	min-width: 0;
+}
+
+.catos-notify-compose-control input,
+.catos-notify-compose-control textarea {
+	box-sizing: border-box;
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 0;
+}
+
+.catos-notify-compose-control textarea {
+	min-height: 110px;
+	line-height: 1.5;
+	resize: vertical;
+}
+
+.catos-notify-compose-actions button {
+	max-width: 100%;
+}
+
+@media (max-width: 640px) {
+	.catos-notify-compose-row {
+		grid-template-columns: minmax(0, 1fr);
+		row-gap: 6px;
+	}
+
+	.catos-notify-compose-label {
+		padding-top: 0;
+		text-align: left;
+	}
+
+	.catos-notify-compose-actions .catos-notify-compose-label {
+		display: none;
+	}
+}

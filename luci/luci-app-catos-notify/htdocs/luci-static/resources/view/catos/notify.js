@@ -32,17 +32,19 @@ function statusLine(label, value) {
 }
 
 function messageField(id, label, type, placeholder) {
-	var input = E(type === 'textarea' ? 'textarea' : 'input', {
+	var multiline = type === 'textarea';
+	var attributes = {
 		'id': 'catos-notify-' + id,
-		'class': 'cbi-input-text',
-		'placeholder': placeholder || label,
-		'style': 'max-width: 32em; width: 100%;'
-	});
+		'class': multiline ? 'cbi-input-textarea' : 'cbi-input-text',
+		'placeholder': placeholder || label
+	};
+	if (multiline) attributes.rows = 4;
+	var input = E(multiline ? 'textarea' : 'input', attributes);
 	return {
 		input: input,
-		row: E('div', { 'class': 'cbi-value' }, [
-			E('label', { 'class': 'cbi-value-title', 'for': 'catos-notify-' + id }, label),
-			E('div', { 'class': 'cbi-value-field' }, input)
+		row: E('div', { 'class': 'catos-notify-compose-row' }, [
+			E('label', { 'class': 'catos-notify-compose-label', 'for': 'catos-notify-' + id }, label),
+			E('div', { 'class': 'catos-notify-compose-control' }, input)
 		])
 	};
 }
@@ -95,6 +97,7 @@ return view.extend({
 		group.input.value = 'default';
 
 		return E('div', {}, [
+			E('link', { 'rel': 'stylesheet', 'href': L.resource('view/catos/notify/overview.css') }),
 			E('h2', {}, _('CatOS Notify')),
 			E('p', {}, _('Configure delivery channels first, then select which events should send notifications.')),
 			E('div', { 'class': 'cbi-section' }, [
@@ -107,27 +110,30 @@ return view.extend({
 			E('div', { 'class': 'cbi-section' }, [
 				E('h3', {}, _('Send a message')),
 				E('p', {}, _('Send a one-off notification to every enabled channel in the chosen delivery group.')),
-				title.row,
-				body.row,
-				group.row,
-				E('div', { 'class': 'cbi-value' }, [
-					E('div', { 'class': 'cbi-value-title' }),
-					E('div', { 'class': 'cbi-value-field' }, E('button', {
-						'class': 'btn cbi-button cbi-button-action',
-						'click': function(ev) {
-							if (!title.input.value.trim() || !body.input.value.trim()) {
-								ui.addNotification(null, E('p', {}, _('Enter a title and message body.')), 'warning');
-								return;
+				E('div', { 'class': 'catos-notify-compose' }, [
+					title.row,
+					body.row,
+					group.row,
+					E('div', { 'class': 'catos-notify-compose-row catos-notify-compose-actions' }, [
+						E('div', { 'class': 'catos-notify-compose-label', 'aria-hidden': 'true' }),
+						E('div', { 'class': 'catos-notify-compose-control' }, E('button', {
+							'class': 'btn cbi-button cbi-button-action',
+							'type': 'button',
+							'click': function(ev) {
+								if (!title.input.value.trim() || !body.input.value.trim()) {
+									ui.addNotification(null, E('p', {}, _('Enter a title and message body.')), 'warning');
+									return;
+								}
+								ev.currentTarget.disabled = true;
+								return sendMessage(title.input.value.trim(), body.input.value, group.input.value.trim() || 'default')
+									.then(resultNotification)
+									.catch(function(err) {
+										ui.addNotification(null, E('p', {}, _('Request failed: ') + err.message), 'danger');
+									})
+									.finally(function() { ev.currentTarget.disabled = false; });
 							}
-							ev.currentTarget.disabled = true;
-							return sendMessage(title.input.value.trim(), body.input.value, group.input.value.trim() || 'default')
-								.then(resultNotification)
-								.catch(function(err) {
-									ui.addNotification(null, E('p', {}, _('Request failed: ') + err.message), 'danger');
-								})
-								.finally(function() { ev.currentTarget.disabled = false; });
-						}
-					}, _('Queue message')))
+						}, _('Queue message')))
+					])
 				])
 			]),
 			E('div', { 'class': 'cbi-section' }, [

@@ -119,3 +119,63 @@ for (const setting of settings) {
 }
 console.log('CatOS Notify: six linked LuCI views and all 26 service settings verified.');
 NODE
+
+node - <<'NODE'
+const assert = require('assert');
+const fs = require('fs');
+const root = 'luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/';
+const source = fs.readFileSync(root + 'notify.js', 'utf8');
+const css = fs.readFileSync(root + 'notify/overview.css', 'utf8');
+assert.equal((css.match(/\{/g) || []).length, (css.match(/\}/g) || []).length, 'Overview CSS braces must balance');
+assert(/\.catos-notify-compose-row\s*\{[^}]*grid-template-columns:\s*160px minmax\(0, 1fr\)/s.test(css), 'Desktop composer must use stable grid columns');
+assert(/@media\s*\(max-width:\s*640px\)[\s\S]*grid-template-columns:\s*minmax\(0, 1fr\)/.test(css), 'Mobile composer must stack labels and inputs');
+
+const notifications = [];
+const sent = [];
+function E(tag, attrs = {}, contents) {
+  return {tag, attrs, children: Array.isArray(contents) ? contents : contents == null ? [] : [contents], value: ''};
+}
+function find(rootNode, predicate) {
+  if (typeof rootNode !== 'object' || rootNode === null) return null;
+  if (predicate(rootNode)) return rootNode;
+  for (const child of rootNode.children || []) {
+    const match = find(child, predicate);
+    if (match) return match;
+  }
+  return null;
+}
+const rpc = { declare: ({method}) => (...args) => {
+  if (method === 'send') { sent.push(args); return Promise.resolve({ok: true}); }
+  return Promise.resolve({enabled: true, queued: 0, history: []});
+}};
+const app = Function('E', '_', 'view', 'rpc', 'ui', 'L', source)(
+  E, s => s, {extend: view => view}, rpc,
+  {addNotification: (_title, content) => notifications.push(content)},
+  {resource: p => p});
+const tree = app.render({enabled: true, queued: 0, history: []});
+assert(find(tree, n => n.tag === 'link' && n.attrs.href === 'view/catos/notify/overview.css'), 'Overview stylesheet must be loaded');
+const compose = find(tree, n => n.attrs?.class === 'catos-notify-compose');
+assert(compose && compose.children.length === 4, 'Composer must have three fields and one action row');
+const fields = ['title', 'body', 'group'];
+for (let i = 0; i < fields.length; i++) {
+  const row = compose.children[i];
+  assert.equal(row.attrs.class, 'catos-notify-compose-row');
+  assert.equal(row.children[0].attrs.for, 'catos-notify-' + fields[i]);
+  assert.equal(row.children[1].attrs.class, 'catos-notify-compose-control');
+}
+const button = find(compose, n => n.tag === 'button');
+assert(button && typeof button.attrs.click === 'function', 'Send button must remain interactive');
+const title = find(compose, n => n.attrs?.id === 'catos-notify-title');
+const body = find(compose, n => n.attrs?.id === 'catos-notify-body');
+button.attrs.click({currentTarget: button});
+assert.equal(sent.length, 0, 'An empty message must be rejected');
+title.value = 'Test';
+body.value = 'Example';
+(async () => {
+  await button.attrs.click({currentTarget: button});
+  assert.deepEqual(sent, [['Test', 'Example', 'default']]);
+  assert.equal(button.disabled, false, 'Send button must be re-enabled after completion');
+  assert(notifications.length >= 2, 'Validation and success feedback must be shown');
+  console.log('CatOS Notify: overview composer structure, responsive CSS and button flow verified.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
+NODE
