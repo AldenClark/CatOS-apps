@@ -32,5 +32,9 @@ for view in luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/n
   node --check "$view"
 done
 node scripts/check-notify-i18n.js
+grep -q 'PKG_NAME:=luci-i18n-catos-notify-zh-cn' luci/luci-i18n-catos-notify-zh-cn/Makefile
+grep -q 'PKG_BUILD_DEPENDS:=luci-base/host' luci/luci-i18n-catos-notify-zh-cn/Makefile
+grep -q 'po2lmo ./po/zh_Hans/catos-notify.po' luci/luci-i18n-catos-notify-zh-cn/Makefile
+test ! -f luci/luci-app-catos-notify/po/zh_Hans/catos-notify.po
 
 printf 'Validated 3 core packages and 3 LuCI packages.\n'
