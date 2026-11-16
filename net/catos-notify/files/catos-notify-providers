@@ -1,0 +1,197 @@
+#!/bin/sh
+# Provider-specific HTTP adapter. Reads {title,body,severity} JSON from stdin.
+umask 077
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+. /usr/share/libubox/jshn.sh
+
+SECTION="$1"
+CONFIG=catos_notify
+RUN=${CATOS_NOTIFY_RUN:-/tmp/catos-notify}
+mkdir -p "$RUN" || exit 1
+TEMP="$(mktemp -d "$RUN/http.XXXXXXXX")" || exit 1
+trap 'rm -f "$TEMP"/*; rmdir "$TEMP"' EXIT HUP INT TERM
+
+field() {
+	uci -q get "$CONFIG.$SECTION.$1" 2>/dev/null || true
+}
+
+setting() {
+	uci -q get "$CONFIG.main.$1" 2>/dev/null || printf '%s' "$2"
+}
+
+valid_url() {
+	case "$1" in https://*|http://*) return 0 ;; *) return 1 ;; esac
+}
+
+valid_token() {
+	[ -n "$1" ] || return 1
+	case "$1" in *[!a-zA-Z0-9._:@/-]*) return 1 ;; esac
+}
+
+valid_header() {
+	case "$1" in ''|*[!a-zA-Z0-9-]*) return 1 ;; esac
+}
+
+urlencode() {
+	printf '%s' "$1" | od -An -tx1 |
+		awk '{for(i=1;i<=NF;i++) printf("%%%s",toupper($i))}'
+}
+
+get_json() {
+	jsonfilter -i "$TEMP/response" -e "@.$1" 2>/dev/null || true
+}
+
+request() {
+	local time_limit="$(setting request_timeout 12)" http_code
+	case "$time_limit" in ''|*[!0-9]*) time_limit=12 ;; esac
+	[ "$time_limit" -ge 3 ] && [ "$time_limit" -le 60 ] || time_limit=12
+	valid_url "$URL" || return 1
+	# Curl reads sensitive arguments from a 0600 configuration file instead
+	# of the process command line. Reject line breaks and quoted directives.
+	case "$URL$AUTH" in *'
+'*|*'
+'*|*'"'*|*'\'* ) return 1 ;; esac
+	printf 'url = "%s"\n' "$URL" > "$TEMP/curl.conf"
+	[ -z "$AUTH" ] || printf 'header = "Authorization: Bearer %s"\n' "$AUTH" >> "$TEMP/curl.conf"
+	if [ -n "$HEADER_NAME" ] && [ -n "$HEADER_VALUE" ]; then
+		valid_header "$HEADER_NAME" || return 1
+		case "$HEADER_VALUE" in *'
+'*|*'
+'*|*'"'*|*'\'*) return 1 ;; esac
+		printf 'header = "%s: %s"\n' "$HEADER_NAME" "$HEADER_VALUE" >> "$TEMP/curl.conf"
+	fi
+	http_code="$(curl -q --config "$TEMP/curl.conf" \
+		--silent --show-error \
+		--max-redirs 0 --connect-timeout 5 --max-time "$time_limit" \
+		--request POST --header 'Content-Type: application/json' \
+		--data-binary @"$TEMP/body" \
+		--output "$TEMP/response" --write-out '%{http_code}' 2>/dev/null)" || return 1
+	case "$http_code" in 2??) ;; *) return 1 ;; esac
+	case "$TYPE" in
+		bark)
+			local code="$(get_json code)"
+			[ -z "$code" ] || [ "$code" = 200 ] ;;
+		pushgo)
+			[ "$(get_json success)" = true ] ;;
+		feishu)
+			local code="$(get_json code)"
+			[ "$code" = 0 ] || [ "$(get_json StatusCode)" = 0 ] ;;
+		dingtalk|wecom) [ "$(get_json errcode)" = 0 ] ;;
+		telegram) [ "$(get_json ok)" = true ] ;;
+		*) return 0 ;;
+	esac
+}
+
+json_init
+INPUT="$(head -c 9216)"
+json_load "$INPUT" || exit 1
+json_get_var TITLE title
+json_get_var BODY body
+json_get_var SEVERITY severity
+[ -n "$TITLE$BODY" ] || exit 1
+[ "${#TITLE}" -le 512 ] && [ "${#BODY}" -le 8192 ] || exit 1
+TYPE="$(field type)"
+URL="$(field url)"
+AUTH=
+HEADER_NAME=
+HEADER_VALUE=
+case "$SEVERITY" in
+	low) PRIORITY=2 ;;
+	high) PRIORITY=4 ;;
+	critical) PRIORITY=5 ;;
+	*) PRIORITY=3 ;;
+esac
+
+json_init
+case "$TYPE" in
+	bark)
+		[ -n "$URL" ] || URL=https://api.day.app
+		URL="${URL%/}/push"
+		json_add_string device_key "$(field key)"
+		json_add_string title "$TITLE"
+		json_add_string body "$BODY"
+		[ "$SEVERITY" != critical ] || json_add_string level critical
+		;;
+	pushgo)
+		[ -n "$URL" ] || URL=https://gateway.pushgo.dev
+		URL="${URL%/}/message"
+		json_add_string channel_id "$(field channel_id)"
+		json_add_string password "$(field password)"
+		json_add_string title "$TITLE"
+		json_add_string body "$BODY"
+		json_add_string severity "$SEVERITY"
+		AUTH="$(field token)"
+		;;
+	ntfy)
+		[ -n "$URL" ] || URL=https://ntfy.sh
+		URL="${URL%/}/"
+		json_add_string topic "$(field topic)"
+		json_add_string title "$TITLE"
+		json_add_string message "$BODY"
+		json_add_int priority "$PRIORITY"
+		AUTH="$(field token)"
+		;;
+	feishu)
+		[ -n "$URL" ] || exit 1
+		local_secret="$(field secret)"
+		if [ -n "$local_secret" ]; then
+			timestamp="$(date +%s)"
+			# Feishu signs an empty message with the key "timestamp\\nsecret".
+			sign="$(printf '' | openssl dgst -sha256 -mac HMAC \
+				-macopt "key:$timestamp
+$local_secret" -binary 2>/dev/null | openssl base64 -A)" || exit 1
+			json_add_string timestamp "$timestamp"
+			json_add_string sign "$sign"
+		fi
+		json_add_string msg_type text
+		json_add_object content
+		json_add_string text "$TITLE
+$BODY"
+		json_close_object
+		;;
+	dingtalk)
+		[ -n "$URL" ] || exit 1
+		local_secret="$(field secret)"
+		if [ -n "$local_secret" ]; then
+			timestamp="$(date +%s)000"
+			sign="$(printf '%s\n%s' "$timestamp" "$local_secret" |
+				openssl dgst -sha256 -hmac "$local_secret" -binary 2>/dev/null |
+				openssl base64 -A)" || exit 1
+			URL="$URL&timestamp=$timestamp&sign=$(urlencode "$sign")"
+		fi
+		json_add_string msgtype text
+		json_add_object text
+		json_add_string content "$TITLE
+$BODY"
+		json_close_object
+		;;
+	wecom)
+		[ -n "$URL" ] || URL="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=$(field key)"
+		json_add_string msgtype text
+		json_add_object text
+		json_add_string content "$TITLE
+$BODY"
+		json_close_object
+		;;
+	telegram)
+		token="$(field token)"
+		valid_token "$token" || exit 1
+		URL="https://api.telegram.org/bot$token/sendMessage"
+		json_add_string chat_id "$(field chat_id)"
+		json_add_string text "$TITLE
+$BODY"
+		;;
+	webhook)
+		[ -n "$URL" ] || exit 1
+		json_add_string title "$TITLE"
+		json_add_string body "$BODY"
+		json_add_string severity "$SEVERITY"
+		AUTH="$(field token)"
+		HEADER_NAME="$(field header_name)"
+		HEADER_VALUE="$(field header_value)"
+		;;
+	*) exit 1 ;;
+esac
+
+printf '%s' "$(json_dump)" > "$TEMP/body"
+request

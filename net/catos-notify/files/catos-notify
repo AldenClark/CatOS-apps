@@ -1,0 +1,3 @@
+#!/bin/sh
+# Local JSON interface: catos-notify send|publish|test|status|flush|token
+exec /usr/libexec/catos-notify/dispatch "$@"

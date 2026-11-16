@@ -1,0 +1,8 @@
+#!/bin/sh
+# Run a bounded snapshot when an interface transitions; the procd monitor
+# handles the next periodic snapshot if this invocation overlaps another.
+[ "$(uci -q get catos_notify.main.enabled 2>/dev/null)" = 1 ] || exit 0
+case "$ACTION" in ifup|ifdown|ifupdate) ;; *) exit 0 ;; esac
+[ -x /usr/libexec/catos-notify/monitor ] || exit 0
+/usr/libexec/catos-notify/monitor once >/dev/null 2>&1 &
+exit 0

@@ -15,7 +15,9 @@ CatOS Apps is an OpenWrt package feed for modular network services and their LuC
 Each LuCI package depends on its corresponding core package. The core packages do not require LuCI.
 
 > [!IMPORTANT]
-> **Development status:** The repository currently provides installable package definitions, initial UCI configuration files, and LuCI integration pages. Notification delivery, DNS updates, and certificate issuance are not implemented yet. These packages are not intended for production use.
+> **Development status:** CatOS Notify has an initial functional implementation, including notification providers, system-event monitoring, templates, LuCI configuration and an opt-in HTTP receiver. It is awaiting SDK and real-device validation. CatOS DDNS and CatOS ACME remain early package skeletons. These packages are not yet production-ready.
+
+CatOS Notify: [user guide](docs/notify.md) · [requirements (简体中文)](docs/notify-requirements.zh-CN.md).
 
 ## Add the source feed
 
@@ -58,7 +60,7 @@ site/                Static binary feed landing page
 .github/workflows/   Validation, SDK builds, and signed APK publication
 ```
 
-The three services have separate packages and configuration namespaces. Cross-service interfaces will be introduced as the implementations mature.
+The three services have separate packages and configuration namespaces. CatOS Notify exposes a JSON CLI and a local ubus interface for calls from other packages.
 
 ## Development
 

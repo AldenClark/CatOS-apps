@@ -1,0 +1,18 @@
+#!/bin/sh
+# rpcd executable plugin; only listed methods are exported.
+PATH=/usr/sbin:/usr/bin:/sbin:/bin
+case "$1" in
+	list)
+		printf '%s\n' '{"status":{},"send":{"title":"string","body":"string","severity":"string","group":"string","channel":"string","template":"string","data":"table"},"publish":{"source":"string","event":"string","title":"string","body":"string","severity":"string","interface":"string","data":"table"},"test":{"channel":"string","title":"string","body":"string"},"token":{}}'
+		;;
+	call)
+		case "$2" in
+			status|send|publish|test|token)
+				# rpcd supplies JSON on stdin. Core validates it.
+				/usr/bin/catos-notify "$2"
+				;;
+			*) printf '%s\n' '{"ok":false,"message":"unknown_method"}'; exit 1 ;;
+		esac
+		;;
+	*) exit 1 ;;
+esac

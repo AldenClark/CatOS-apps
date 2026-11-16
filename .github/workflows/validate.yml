@@ -20,3 +20,4 @@ jobs:
         run: |
           bash scripts/check-feed.sh
           bash scripts/test-assemble-apk-feed.sh
+          bash scripts/test-notify-structure.sh

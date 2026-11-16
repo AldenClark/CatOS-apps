@@ -15,7 +15,9 @@ CatOS Apps 是面向 OpenWrt 及兼容系统的模块化应用软件包源，包
 LuCI 软件包依赖对应的核心软件包；核心软件包无需依赖 LuCI。
 
 > [!IMPORTANT]
-> **开发状态：** 当前仓库提供可构建的软件包定义、初始 UCI 配置文件以及 LuCI 页面骨架。通知投递、动态 DNS 更新和证书签发功能尚未实现，暂不适用于生产环境。
+> **开发状态：** CatOS Notify 已具备通知渠道、系统事件、模板、LuCI 配置和可选 HTTP 消息接收器的初步功能实现，尚待 SDK 构建及真实设备验证。CatOS DDNS 和 CatOS ACME 仍为软件包骨架。当前版本暂不建议用于生产环境。
+
+通知服务文档：[使用及集成说明](docs/notify.md) · [详细需求规格](docs/notify-requirements.zh-CN.md)。
 
 ## 添加源码 Feed
 
@@ -58,7 +60,7 @@ site/                二进制软件源静态页面
 .github/workflows/   静态检查、SDK 构建与已签名 APK 发布
 ```
 
-三个应用分别维护软件包和配置命名空间。跨应用调用接口将在功能实现过程中逐步提供。
+三个应用分别维护软件包和配置命名空间。CatOS Notify 已为其他软件包提供 JSON 命令行和本机 ubus 接口。
 
 ## 参与开发
 
