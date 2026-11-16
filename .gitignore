@@ -1,0 +1,22 @@
+# OpenWrt build output
+bin/
+build_dir/
+dl/
+logs/
+staging_dir/
+tmp/
+artifacts/
+*.ipk
+*.apk
+*.adb
+
+# Editor and operating-system files
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Python tooling caches
+__pycache__/
+.pytest_cache/

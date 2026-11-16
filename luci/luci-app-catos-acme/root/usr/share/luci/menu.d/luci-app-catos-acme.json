@@ -1,0 +1,13 @@
+{
+  "admin/services/catos-acme": {
+    "title": "CatOS ACME",
+    "order": 82,
+    "action": {
+      "type": "view",
+      "path": "catos/acme"
+    },
+    "depends": {
+      "acl": ["luci-app-catos-acme"]
+    }
+  }
+}

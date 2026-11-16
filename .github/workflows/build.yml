@@ -1,0 +1,50 @@
+name: Build packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      openwrt_version:
+        description: OpenWrt release
+        required: true
+        type: choice
+        options:
+          - '25.12.6'
+          - '24.10.7'
+      architecture:
+        description: OpenWrt package architecture
+        required: true
+        type: choice
+        options:
+          - x86_64
+          - aarch64_generic
+          - mips_24kc
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build all CatOS packages with OpenWrt SDK
+        uses: openwrt/gh-action-sdk@main
+        env:
+          ARCH: ${{ inputs.architecture }}-${{ inputs.openwrt_version }}
+          FEEDNAME: catos
+          PACKAGES: catos-notify catos-ddns catos-acme luci-app-catos-notify luci-app-catos-ddns luci-app-catos-acme
+          ARTIFACTS_DIR: ${{ github.workspace }}/artifacts
+
+      - name: Upload compiled packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: catos-packages-${{ inputs.architecture }}-${{ inputs.openwrt_version }}
+          path: |
+            artifacts/bin/packages/**/*.ipk
+            artifacts/bin/packages/**/*.apk
+          if-no-files-found: error
