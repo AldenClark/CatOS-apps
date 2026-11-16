@@ -4,13 +4,17 @@
 
 CatOS Apps 提供适用于 OpenWrt 的 APK 签名软件源，包含核心应用软件包与 LuCI 管理界面。软件包依赖的 OpenWrt 系统组件由官方软件源提供。
 
-## 支持范围
+## 兼容范围
+
+**通用软件源**仅包含架构为 `all` 的软件包，适用于使用 APK v3 的兼容 OpenWrt 系统。定制固件自己的版本号不参与选源，但仍须确保运行依赖可以通过当前设备兼容的软件源解析。
+
+以下 OpenWrt 专用源继续保留：
 
 | OpenWrt 版本 | APK 软件包架构 |
 | --- | --- |
 | 25.12.6 | `x86_64`、`aarch64_generic`、`mips_24kc` |
 
-二进制软件源要求使用 APK 包管理器。采用 `opkg` 的 OpenWrt 24.10 可通过[源码 Feed](../README.zh-CN.md#添加源码-feed) 自行编译。
+二进制软件源要求使用 APK v3。采用 `opkg` 的 OpenWrt 可通过[源码 Feed](../README.zh-CN.md#添加源码-feed) 自行编译。
 
 **开发状态：** CatOS Notify 已有初步功能实现，尚待 SDK 构建与实际设备验证。CatOS DDNS 和 CatOS ACME 仍为软件包骨架。当前软件包暂不适用于生产环境。
 
@@ -25,17 +29,16 @@ wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && as
 apk add luci-app-catos-notify
 ```
 
-该脚本会安装签名公钥、匹配的软件源索引，并执行 `apk update`；可重复运行，**不会自动安装软件包**。运行前可以先检查脚本源码：[feed.sh](../feed.sh)。脚本会拒绝不支持的系统版本、架构，以及意外更换的签名公钥。
+该脚本会安装签名公钥、配置通用软件源索引，并执行 `apk update`；可重复运行，**不会自动安装软件包**。运行前可以先检查脚本源码：[feed.sh](../feed.sh)。脚本要求 APK v3，并拒绝意外更换的签名公钥。
 
 ### 手动配置
 
 也可以不使用脚本，手动配置：
 
-1. 确认设备的 OpenWrt 版本与架构：
+1. 确认包管理器版本与架构：
 
    ```sh
-   . /etc/openwrt_release
-   echo "$DISTRIB_RELEASE"
+   apk --version
    apk --print-arch
    ```
 
@@ -47,12 +50,10 @@ apk add luci-app-catos-notify
      https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
    ```
 
-3. 将与设备版本、架构一致的 `packages.adb` 地址添加到 APK 配置：
+3. 将通用 `packages.adb` 地址添加到 APK 配置：
 
    ```sh
-   . /etc/openwrt_release
-   arch="$(apk --print-arch)"
-   repo="https://aldenclark.github.io/CatOS-apps/releases/${DISTRIB_RELEASE}/${arch}/packages.adb"
+   repo="https://aldenclark.github.io/CatOS-apps/universal/packages.adb"
    grep -qxF "$repo" /etc/apk/repositories.d/customfeeds.list 2>/dev/null || \
      printf '%s\n' "$repo" >> /etc/apk/repositories.d/customfeeds.list
    apk update
@@ -66,7 +67,7 @@ apk add luci-app-catos-notify
 
 三个核心软件包 `catos-notify`、`catos-ddns`、`catos-acme` 均可在不安装 LuCI 界面的情况下独立安装。
 
-若索引无法下载，请检查目标 OpenWrt 版本与架构是否已经发布。执行 `apk update` 时，APK 应使用已安装的公钥验证软件源签名。
+若索引无法下载，请检查通用软件源是否已重新部署到 GitHub Pages。执行 `apk update` 时，APK 应使用已安装的公钥验证软件源签名。架构无关不等于运行依赖必然兼容。
 
 ## 维护者：签名密钥配置
 

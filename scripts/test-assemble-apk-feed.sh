@@ -24,6 +24,11 @@ bash scripts/assemble-apk-feed.sh "$temp_dir/sdk/bin/packages" "$temp_dir/site" 
 test -s "$temp_dir/site/releases/25.12.6/aarch64_generic/packages.adb"
 test "$(find "$temp_dir/site/releases/25.12.6/aarch64_generic" -name '*.apk' | wc -l | tr -d ' ')" -eq 6
 
+# Publishing an architecture-independent alias must preserve the signed bytes.
+mkdir -p "$temp_dir/site/universal"
+cp -a "$temp_dir/site/releases/25.12.6/aarch64_generic/." "$temp_dir/site/universal/"
+(cd "$temp_dir/site/universal" && sha256sum --check SHA256SUMS)
+
 if bash scripts/assemble-apk-feed.sh "$temp_dir/sdk/bin/packages" "$temp_dir/site" 25.12.6 aarch64_generic 2>/dev/null; then
   printf 'Duplicate destination should be rejected.\n' >&2
   exit 1

@@ -4,13 +4,17 @@
 
 CatOS Apps provides a signed APK package repository for compatible OpenWrt systems. The repository contains the application packages and their LuCI interfaces; dependencies supplied by OpenWrt are resolved from the official OpenWrt repositories.
 
-## Supported targets
+## Compatibility
+
+The **universal feed** contains only packages declared with architecture `all` and targets compatible OpenWrt-based systems using APK v3. Branded firmware version numbers do not affect feed selection. Package dependencies must still be available from the device's own compatible repositories.
+
+The following release-specific feed snapshots remain available:
 
 | OpenWrt release | APK architectures |
 | --- | --- |
 | 25.12.6 | `x86_64`, `aarch64_generic`, `mips_24kc` |
 
-The binary repository requires OpenWrt's APK package manager. OpenWrt 24.10 devices using `opkg` should use the [source feed](../README.md#add-the-source-feed) to build packages instead.
+The binary repository requires APK v3. OpenWrt devices using `opkg` should use the [source feed](../README.md#add-the-source-feed) to build packages instead.
 
 **Development status:** CatOS Notify has an initial functional implementation awaiting SDK and real-device validation. CatOS DDNS and CatOS ACME remain early package skeletons. These packages are not yet production-ready.
 
@@ -25,17 +29,16 @@ wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && as
 apk add luci-app-catos-notify
 ```
 
-The script configures the signing key, chooses the correct signed package index, and runs `apk update`. It is safe to run again and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). The script refuses unsupported releases or architectures and rejects unexpected signing-key changes.
+The script configures the signing key, selects the universal signed index, and runs `apk update`. It is safe to run again and **does not install packages**. Inspect the script before running it: [feed.sh](../feed.sh). It requires APK v3 and rejects unexpected signing-key changes.
 
 ### Manual setup
 
 You can also configure the repository without the setup script:
 
-1. Confirm that the device runs a supported OpenWrt release and package architecture:
+1. Confirm the package manager and architecture:
 
    ```sh
-   . /etc/openwrt_release
-   echo "$DISTRIB_RELEASE"
+   apk --version
    apk --print-arch
    ```
 
@@ -47,12 +50,10 @@ You can also configure the repository without the setup script:
      https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem
    ```
 
-3. Add the signed index that matches the device release and architecture:
+3. Add the universal signed index:
 
    ```sh
-   . /etc/openwrt_release
-   arch="$(apk --print-arch)"
-   repo="https://aldenclark.github.io/CatOS-apps/releases/${DISTRIB_RELEASE}/${arch}/packages.adb"
+   repo="https://aldenclark.github.io/CatOS-apps/universal/packages.adb"
    grep -qxF "$repo" /etc/apk/repositories.d/customfeeds.list 2>/dev/null || \
      printf '%s\n' "$repo" >> /etc/apk/repositories.d/customfeeds.list
    apk update
@@ -66,7 +67,7 @@ You can also configure the repository without the setup script:
 
 The core packages (`catos-notify`, `catos-ddns`, `catos-acme`) can also be installed without their LuCI interfaces.
 
-If the index is unavailable, confirm that a binary release has been published for the exact OpenWrt release and APK architecture. A successful `apk update` must verify the repository signature against the installed public key.
+If the index is unavailable, confirm that the latest universal feed was published to GitHub Pages. A successful `apk update` must verify the repository signature against the installed public key. Universal package architecture does not waive runtime dependency compatibility.
 
 ## Maintainer: signing key setup
 

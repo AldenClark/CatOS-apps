@@ -110,6 +110,16 @@ jobs:
             (cd "$feed_dir" && sha256sum --check SHA256SUMS)
           done
 
+          # These six packages must remain pure scripts/resources for a
+          # cross-firmware feed. A future native package needs its own target.
+          for app in notify ddns acme; do
+            grep -Eq '^[[:space:]]*PKGARCH:=all$' "net/catos-$app/Makefile"
+            grep -Eq '^[[:space:]]*LUCI_PKGARCH:=all$' "luci/luci-app-catos-$app/Makefile"
+          done
+          mkdir -p site-dist/universal
+          cp -a site-dist/releases/${{ inputs.openwrt_version }}/aarch64_generic/. site-dist/universal/
+          (cd site-dist/universal && sha256sum --check SHA256SUMS)
+
           mkdir -p site-dist/keys
           printf '%s\n' "$CATOS_APK_PRIVATE_KEY" | openssl pkey -pubout -out site-dist/keys/catos-apk.pem
           if ! openssl pkey -pubin -in site-dist/keys/catos-apk.pem -text -noout | grep -q 'prime256v1'; then

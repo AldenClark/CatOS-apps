@@ -51,9 +51,9 @@ wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh && as
 apk add luci-app-catos-notify
 ```
 
-The setup script checks the exact OpenWrt release and APK architecture, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), adds the matching signed `packages.adb` URL, and runs `apk update`. It **does not install any application packages**. You can also install only `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
+The setup script checks for APK v3, installs the [repository public key](https://aldenclark.github.io/CatOS-apps/keys/catos-apk.pem), adds the [universal signed index](https://aldenclark.github.io/CatOS-apps/universal/packages.adb), and runs `apk update`. The universal feed contains only architecture-independent packages. It **does not install any application packages**. You can also install only `catos-notify`, `catos-ddns`, or `catos-acme` without LuCI.
 
-Supported publishing targets are `x86_64`, `aarch64_generic`, and `mips_24kc`. The binary feed is not compatible with OpenWrt 24.10's `opkg` package manager.
+The universal feed supports compatible OpenWrt-based firmware with APK v3, including snapshots with custom firmware version strings, provided their runtime dependencies can be resolved. Release-specific feed snapshots continue to be published for OpenWrt 25.12.6 (`x86_64`, `aarch64_generic`, and `mips_24kc`). The binary feed is not compatible with `opkg`.
 
 See the [binary feed installation and publishing guide](docs/binary-feed.md). The setup script is published together with each successful **Publish signed APK feed** workflow deployment.
 
