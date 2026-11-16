@@ -26,7 +26,8 @@ MOCK
 cat > "$test_root/bin/apk" <<'MOCK'
 #!/bin/sh
 case "${1:-}" in
-  --print-arch) printf '%s\n' "${TEST_ARCH:-aarch64_generic}" ;;
+  --version) printf '%s\n' "${TEST_APK_VERSION:-apk-tools 3.0.5, compiled for aarch64.}" ;;
+  --print-arch) printf '%s\n' "${TEST_ARCH:-aarch64}" ;;
   update)
     printf 'update\n' >> "$TEST_APK_LOG"
     [ "${TEST_UPDATE_FAIL:-0}" = '0' ]
@@ -53,13 +54,13 @@ esac
 MOCK
 
 chmod +x "$test_root/bin/id" "$test_root/bin/apk" "$test_root/bin/wget"
-printf "DISTRIB_RELEASE='25.12.6'\n" > "$test_root/etc/openwrt_release"
+printf "DISTRIB_RELEASE='0.8.5-beta'\nDISTRIB_ARCH='aarch64_cortex-a55'\n" > "$test_root/etc/openwrt_release"
 
 export TEST_APK_LOG="$test_root/apk.log"
 export PATH="$test_root/bin:$PATH"
 repository="$test_root/etc/apk/repositories.d/customfeeds.list"
 key="$test_root/etc/apk/keys/catos-apk.pem"
-expected='https://aldenclark.github.io/CatOS-apps/releases/25.12.6/aarch64_generic/packages.adb'
+expected='https://aldenclark.github.io/CatOS-apps/universal/packages.adb'
 
 sh "$test_root/feed.sh" >/dev/null
 grep -Fxq "$expected" "$repository"
@@ -71,15 +72,15 @@ sh "$test_root/feed.sh" >/dev/null
 test "$(wc -l < "$repository")" -eq 1
 test "$(wc -l < "$TEST_APK_LOG")" -eq 2
 
-# Fail closed for an unsupported release or architecture.
+# Custom branding and CPU subtargets must not block architecture-independent APKs.
 printf "DISTRIB_RELEASE='24.10.7'\n" > "$test_root/etc/openwrt_release"
-if sh "$test_root/feed.sh" >/dev/null 2>&1; then
-  echo 'Unsupported OpenWrt release unexpectedly succeeded.' >&2
-  exit 1
-fi
-printf "DISTRIB_RELEASE='25.12.6'\n" > "$test_root/etc/openwrt_release"
-if TEST_ARCH='aarch64_cortex-a53' sh "$test_root/feed.sh" >/dev/null 2>&1; then
-  echo 'Unsupported package architecture unexpectedly succeeded.' >&2
+TEST_ARCH='aarch64_cortex-a53' sh "$test_root/feed.sh" >/dev/null
+test "$(wc -l < "$repository")" -eq 1
+test "$(wc -l < "$TEST_APK_LOG")" -eq 3
+
+# APK v2 cannot consume the v3 signed-index format.
+if TEST_APK_VERSION='apk-tools 2.14.6' sh "$test_root/feed.sh" >/dev/null 2>&1; then
+  echo 'Unsupported APK format unexpectedly succeeded.' >&2
   exit 1
 fi
 
@@ -97,16 +98,17 @@ if TEST_INDEX_FAIL=1 sh "$test_root/feed.sh" >/dev/null 2>&1; then
 fi
 test "$(wc -l < "$repository")" -eq 1
 
-# Reject obsolete CatOS URLs while leaving user configuration untouched.
+# Migrate obsolete CatOS URLs without touching unrelated custom feeds.
 printf '%s\n' 'https://aldenclark.github.io/CatOS-apps/releases/25.12.5/aarch64_generic/packages.adb' >> "$repository"
-if sh "$test_root/feed.sh" >/dev/null 2>&1; then
-  echo 'Stale repository entry unexpectedly succeeded.' >&2
-  exit 1
-fi
+printf '%s\n' 'https://example.org/custom/packages.adb' >> "$repository"
+sh "$test_root/feed.sh" >/dev/null
 test "$(wc -l < "$repository")" -eq 2
+grep -Fxq "$expected" "$repository"
+grep -Fxq 'https://example.org/custom/packages.adb' "$repository"
+! grep -Fq '/releases/25.12.5/' "$repository"
 
 # No failing preflight may invoke an APK update.
-test "$(wc -l < "$TEST_APK_LOG")" -eq 2
+test "$(wc -l < "$TEST_APK_LOG")" -eq 4
 
 # An APK index update failure must be reported, not treated as successful setup.
 printf '%s\n' "$expected" > "$repository"
@@ -114,6 +116,6 @@ if TEST_UPDATE_FAIL=1 sh "$test_root/feed.sh" >/dev/null 2>&1; then
   echo 'Failed APK index update unexpectedly succeeded.' >&2
   exit 1
 fi
-test "$(wc -l < "$TEST_APK_LOG")" -eq 3
+test "$(wc -l < "$TEST_APK_LOG")" -eq 5
 
 echo 'CatOS feed bootstrap tests passed.'

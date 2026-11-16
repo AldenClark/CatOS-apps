@@ -15,12 +15,13 @@
     <main>
       <h1>CatOS Apps</h1>
       <p>Signed APK package repositories for CatOS applications on OpenWrt.</p>
-      <p>Supported release: OpenWrt 25.12.6. Supported package architectures: x86_64, aarch64_generic, mips_24kc.</p>
+      <p>The universal signed feed supports compatible OpenWrt-based firmware with APK v3, including custom-version snapshots, subject to runtime dependency compatibility.</p>
       <h2>Quick setup</h2>
       <p>Connect to your OpenWrt device over SSH and run:</p>
       <pre><code>wget -O /tmp/catos-feed.sh https://aldenclark.github.io/CatOS-apps/feed.sh &amp;&amp; ash /tmp/catos-feed.sh
 apk add luci-app-catos-notify</code></pre>
-      <p>The script adds the signed APK repository and its public key; it does not install application packages. Run it only on a supported release and architecture.</p>
+      <p>The script adds the <a href="universal/packages.adb">universal signed APK repository</a> and its public key; it does not install application packages.</p>
+      <p>Release-specific repositories for OpenWrt 25.12.6:</p>
       <p>Download the <a href="keys/catos-apk.pem">APK repository public key</a> and select the repository index matching your system:</p>
       <ul>
         <li><a href="releases/25.12.6/x86_64/packages.adb">OpenWrt 25.12.6 · x86_64</a></li>

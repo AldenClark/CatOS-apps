@@ -20,30 +20,35 @@ fail() {
 command -v apk >/dev/null 2>&1 || fail 'APK is required; opkg-based systems are not supported by this binary feed.'
 command -v wget >/dev/null 2>&1 || fail 'wget is required.'
 command -v cmp >/dev/null 2>&1 || fail 'cmp is required.'
+command -v awk >/dev/null 2>&1 || fail 'awk is required.'
 
 . /etc/openwrt_release
-release=${DISTRIB_RELEASE:-}
-case "$release" in
-	25.12.6) ;;
-	*) fail "Unsupported OpenWrt release: ${release:-unknown}. The signed feed currently supports 25.12.6 only." ;;
+release=${DISTRIB_RELEASE:-unknown}
+apk_version=$(apk --version) || fail 'Could not determine the APK package-manager version.'
+case "$apk_version" in
+	*'apk-tools 3.'*) ;;
+	*) fail "The signed CatOS feed requires APK v3; found: $apk_version" ;;
 esac
-
 architecture=$(apk --print-arch) || fail 'Could not determine the APK package architecture.'
-case "$architecture" in
-	x86_64|aarch64_generic|mips_24kc) ;;
-	*) fail "Unsupported APK architecture: $architecture. Supported: x86_64, aarch64_generic, mips_24kc." ;;
-esac
+[ -n "$architecture" ] || fail 'APK returned an empty package architecture.'
 
-repository_url="$base_url/releases/$release/$architecture/packages.adb"
+# All current CatOS packages are architecture-independent (PKGARCH=all).
+# Keep this URL independent of branded firmware versions and CPU subtargets.
+repository_url="$base_url/universal/packages.adb"
 public_key_url="$base_url/keys/catos-apk.pem"
 
-info "OpenWrt $release / $architecture"
+info "Firmware $release / APK v3 / $architecture"
 info 'Checking that the signed repository is available...'
 wget -q -O /dev/null "$repository_url" || fail "Cannot download the repository index: $repository_url"
 
 mkdir -p /etc/apk/keys /etc/apk/repositories.d || fail 'Cannot create APK configuration directories.'
 temporary_key=$(mktemp /etc/apk/keys/.catos-apk.XXXXXX) || fail 'Cannot create a temporary public-key file.'
-trap 'rm -f "$temporary_key"' EXIT
+temporary_repo=''
+cleanup() {
+	rm -f "$temporary_key"
+	[ -z "$temporary_repo" ] || rm -f "$temporary_repo"
+}
+trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 
 info 'Downloading the repository public key...'
@@ -61,11 +66,17 @@ else
 	info 'Signing key installed.'
 fi
 
-if [ -f "$repository_file" ] && grep -F 'https://aldenclark.github.io/CatOS-apps/releases/' "$repository_file" | grep -Fvx "$repository_url" >/dev/null 2>&1; then
-	fail "A different CatOS repository is already configured in $repository_file. Remove the obsolete entry before retrying."
-fi
-
-if grep -Fxq "$repository_url" "$repository_file" 2>/dev/null; then
+# Migrate only CatOS's previous release-specific URLs; preserve other feeds.
+if [ -f "$repository_file" ] && grep -Fq "$base_url/releases/" "$repository_file"; then
+	temporary_repo=$(mktemp /etc/apk/repositories.d/.catos-feed.XXXXXX) || fail 'Cannot create a temporary repository file.'
+	awk -v prefix="$base_url/releases/" 'index($0, prefix) != 1' "$repository_file" > "$temporary_repo" || fail 'Cannot read the existing repository configuration.'
+	if ! grep -Fxq "$repository_url" "$temporary_repo"; then
+		printf '%s\n' "$repository_url" >> "$temporary_repo" || fail 'Cannot update the repository configuration.'
+	fi
+	chmod 0644 "$temporary_repo"
+	mv "$temporary_repo" "$repository_file" || fail 'Cannot update the repository configuration.'
+	info 'Migrated an older CatOS repository entry.'
+elif grep -Fxq "$repository_url" "$repository_file" 2>/dev/null; then
 	info 'Repository is already configured.'
 else
 	printf '%s\n' "$repository_url" >> "$repository_file" || fail 'Cannot add the repository to APK configuration.'
