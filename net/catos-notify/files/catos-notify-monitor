@@ -67,6 +67,16 @@ emit() {
 	json_add_string interface "$interface"
 	json_add_string old "$old"
 	json_add_string new "$new"
+	# Named data fields add semantics without breaking existing old/new templates.
+	case "$event" in
+		auth.*.failed) json_add_string count "$new" ;;
+		health.*) json_add_string value "$new" ;;
+	esac
+	shift 7
+	while [ "$#" -ge 2 ]; do
+		json_add_string "$1" "$2"
+		shift 2
+	done
 	json_close_object
 	json_dump | /usr/bin/catos-notify publish >/dev/null 2>&1 || true
 }
@@ -81,7 +91,7 @@ change() {
 	fi
 	[ "$old" = "$value" ] && return
 	printf '%s' "$value" > "$STATE/$key"
-	emit "$event" "$label: ${old:--} -> ${value:--}" "$interface" "$old" "$value" "$severity"
+	emit "$event" "$label: ${old:--} -> ${value:--}" "$interface" "$old" "$value" "$severity" ''
 }
 
 wan_poll() {
@@ -95,9 +105,9 @@ wan_poll() {
 			prev="$(cat "$STATE/wan-$iface-up")"
 			if [ "$prev" != "$up" ]; then
 				if [ "$up" = 1 ]; then
-					emit wan.up "WAN $iface has recovered" "$iface" "$prev" "$up" normal
+					emit wan.up "WAN $iface has recovered" "$iface" "$prev" "$up" normal ''
 				else
-					emit wan.down "WAN $iface disconnected" "$iface" "$prev" "$up" high
+					emit wan.down "WAN $iface disconnected" "$iface" "$prev" "$up" high ''
 				fi
 			fi
 		fi
@@ -217,9 +227,9 @@ probe_device() {
 	printf '%s' "$status" > "$STATE/device-$key"
 	rm -f "$STATE/device-$key-pending"
 	if [ "$status" = online ]; then
-		emit device.known.online "Device ${name:-$mac} ($addr) is online" '' offline online normal "$mac"
+		emit device.known.online "Device ${name:-$mac} ($addr) is online" '' offline online normal "$mac" device_name "$name" ip "$addr"
 	else
-		emit device.known.offline "Device ${name:-$mac} ($addr) is offline" '' online offline high "$mac"
+		emit device.known.offline "Device ${name:-$mac} ($addr) is offline" '' online offline high "$mac" device_name "$name" ip "$addr"
 	fi
 }
 
@@ -262,17 +272,17 @@ auth_log_poll() {
 		if [ ! -f "$STATE/auth-$type-alert" ] ||
 			[ $((now - $(cat "$STATE/auth-$type-alert"))) -ge "$window" ]; then
 			origin="$(cat "$STATE/auth-$type-origin" 2>/dev/null)"
-			emit "auth.$type.failed" "$count failed $type logins within $window seconds; last source: ${origin:-unknown}" '' '' "$count" high
+			emit "auth.$type.failed" "$count failed $type logins within $window seconds; last source: ${origin:-unknown}" '' '' "$count" high '' window "$window" origin "$origin"
 			printf '%s' "$now" > "$STATE/auth-$type-alert"
 		fi
 	done
 }
 
 health_threshold() {
-	local key="$1" active="$2" event="$3" description="$4" value="$5" previous
+	local key="$1" active="$2" event="$3" description="$4" value="$5" threshold="$6" mount="${7:-}" previous
 	previous="$(cat "$STATE/health-$key" 2>/dev/null)"
 	[ "$active" != 1 ] || [ "$previous" = 1 ] ||
-		emit "$event" "$description" '' '' "$value" high
+		emit "$event" "$description" '' '' "$value" high '' threshold "$threshold" mount "$mount"
 	printf '%s' "$active" > "$STATE/health-$key"
 }
 
@@ -290,7 +300,7 @@ health_poll() {
 		active=0
 		[ "$temp" -lt "$max_temp" ] || active=1
 		health_threshold cpu_temperature "$active" health.cpu_temp.high \
-			"CPU temperature is $temp°C (threshold $max_temp°C)" "$temp"
+			"CPU temperature is $temp°C (threshold $max_temp°C)" "$temp" "$max_temp"
 	fi
 
 	load="$(cut -d' ' -f1 /proc/loadavg 2>/dev/null)"
@@ -298,7 +308,7 @@ health_poll() {
 	active=0
 	awk -v x="$load" -v limit="$max_load" 'BEGIN { exit !(x+0>=limit+0) }' && active=1
 	health_threshold load "$active" health.load.high \
-		"Load average is $load (threshold $max_load)" "$load"
+		"Load average is $load (threshold $max_load)" "$load" "$max_load"
 
 	mem="$(awk '/^MemAvailable:/ {print int($2/1024); exit}' /proc/meminfo 2>/dev/null)"
 	min_mem="$(number_or "$(setting memory_available_mb 32)" 32)"
@@ -306,7 +316,7 @@ health_poll() {
 		active=0
 		[ "$mem" -gt "$min_mem" ] || active=1
 		health_threshold memory "$active" health.memory.high \
-			"Available memory $mem MiB (threshold $min_mem MiB)" "$mem"
+			"Available memory $mem MiB (threshold $min_mem MiB)" "$mem" "$min_mem"
 	fi
 
 	mount="$(setting storage_mount /)"
@@ -317,7 +327,7 @@ health_poll() {
 		active=0
 		[ "$disk" -gt "$min_disk" ] || active=1
 		health_threshold storage "$active" health.storage.low \
-			"Available storage $disk MiB at $mount (threshold $min_disk MiB)" "$disk"
+			"Available storage $disk MiB at $mount (threshold $min_disk MiB)" "$disk" "$min_disk" "$mount"
 	fi
 }
 
@@ -335,7 +345,7 @@ summary_poll() {
 			"$(cat "$STATE/wan-$iface-ipv6" 2>/dev/null)" \
 			"$(cat "$STATE/wan-$iface-prefix" 2>/dev/null)"
 	done)"
-	emit system.summary "Uptime: ${uptime}s; load: $load; memory available: ${mem} MiB; storage available: ${disk} MiB; $ips" '' '' '' normal
+	emit system.summary "Uptime: ${uptime}s; load: $load; memory available: ${mem} MiB; storage available: ${disk} MiB; $ips" '' '' '' normal '' uptime "$uptime" load "$load" memory "$mem" storage "$disk" addresses "$ips"
 }
 
 boot_once() {
@@ -345,7 +355,7 @@ boot_once() {
 	old="$(cat "$STATE/boot-id" 2>/dev/null)"
 	[ "$old" = "$bootid" ] && return
 	printf '%s' "$bootid" > "$STATE/boot-id"
-	emit system.boot 'Router startup complete' '' '' '' normal
+	emit system.boot 'Router startup complete' '' '' '' normal ''
 }
 
 poll_once() {

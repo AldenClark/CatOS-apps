@@ -4,11 +4,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "A channel may be included in multiple groups. A group with no channels cannot deliver messages."
+msgstr "同一渠道可以加入多个投递分组。没有成员渠道的分组无法投递消息。"
+
+msgid "A delivery group contains one or more channels. Manage membership here; channels themselves do not belong to any default group."
+msgstr "投递分组可包含多个渠道，成员关系在这里管理。渠道本身不属于任何默认分组。"
+
 msgid "Allowed LAN devices"
 msgstr "允许访问的局域网设备"
 
 msgid "Allowed source"
 msgstr "允许的访问来源"
+
+msgid "Available memory (MiB)"
+msgstr "可用内存（MiB）"
+
+msgid "Available storage (MiB)"
+msgstr "可用存储（MiB）"
 
 msgid "Bark device / WeCom key"
 msgstr "Bark 设备密钥 / 企业微信 Key"
@@ -16,23 +28,38 @@ msgstr "Bark 设备密钥 / 企业微信 Key"
 msgid "Bot token / API bearer token"
 msgstr "机器人令牌 / API Bearer 令牌"
 
+msgid "CPU temperature (°C)"
+msgstr "CPU 温度（°C）"
+
 msgid "CPU temperature warning (°C)"
 msgstr "CPU 温度告警阈值（°C）"
 
 msgid "CatOS Notify"
 msgstr "CatOS 通知中心"
 
-msgid "Channel"
-msgstr "渠道"
+msgid "Channel not found. Save & Apply before testing."
+msgstr "未找到该通知渠道，请先保存并应用配置，再发送测试。"
+
+msgid "Channel: "
+msgstr "渠道："
 
 msgid "Channels"
 msgstr "通知渠道"
 
-msgid "Channel not found. Save & Apply before testing."
-msgstr "未找到该通知渠道，请先保存并应用配置，再发送测试。"
-
 msgid "Check public IPv4/IPv6"
 msgstr "检测公网 IPv4/IPv6 地址"
+
+msgid "Choose channels and/or groups under Delivery. If a channel is selected both directly and through a group, it receives one message."
+msgstr "在“投递”中选择渠道和／或分组。若同一渠道被直接选中且包含在分组中，也只会接收一份消息。"
+
+msgid "Click a variable to insert it at the cursor in this template."
+msgstr "点击变量，将其插入此模板的光标位置。"
+
+msgid "Close"
+msgstr "关闭"
+
+msgid "Configure a delivery destination here. Delivery groups maintain their own channel membership."
+msgstr "在这里配置通知目的地。投递分组单独管理自己的成员渠道。"
 
 msgid "Configure delivery channels first, then select which events should send notifications."
 msgstr "请先配置通知渠道，再选择需要发送通知的事件。"
@@ -43,6 +70,18 @@ msgstr "可在“设置”页面配置服务启动、事件监测及 HTTP 接收
 msgid "Configured channels"
 msgstr "已配置的通知渠道"
 
+msgid "Configured delivery groups"
+msgstr "已配置的投递分组"
+
+msgid "Configured device MAC (if set)"
+msgstr "配置的设备 MAC（如已填写）"
+
+msgid "Configured device name"
+msgstr "配置的设备名称"
+
+msgid "Content unavailable"
+msgstr "无消息内容记录"
+
 msgid "Control service operation, event collection, resource thresholds and the optional HTTP receiver."
 msgstr "配置服务运行、事件采集、资源告警阈值和可选的 HTTP 接收端。"
 
@@ -52,11 +91,35 @@ msgstr "冷却时间（秒）"
 msgid "Could not queue message: "
 msgstr "消息入队失败："
 
+msgid "Counting window (seconds)"
+msgstr "统计窗口（秒）"
+
 msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
 msgstr "统计近期 SSH 和 LuCI 登录失败次数。开启对应事件规则后才会发送告警。"
 
 msgid "Critical"
 msgstr "严重"
+
+msgid "Current IPv4 addresses (CIDR)"
+msgstr "当前 IPv4 地址（CIDR）"
+
+msgid "Current IPv6 addresses (CIDR)"
+msgstr "当前 IPv6 地址（CIDR）"
+
+msgid "Current default-route device"
+msgstr "当前默认路由设备"
+
+msgid "Current delegated prefixes (CIDR)"
+msgstr "当前委派前缀（CIDR）"
+
+msgid "Current public IPv4 address"
+msgstr "当前公网 IPv4 地址"
+
+msgid "Current public IPv6 address"
+msgstr "当前公网 IPv6 地址"
+
+msgid "Custom event variables depend on its publisher. Add flat data keys as {{key}}; only common variables are listed here."
+msgstr "自定义事件变量由发布方定义。可用 {{key}} 引用 data 中的平面字段；此处仅列出通用变量。"
 
 msgid "Custom header name"
 msgstr "自定义请求头名称"
@@ -64,11 +127,29 @@ msgstr "自定义请求头名称"
 msgid "Custom header value"
 msgstr "自定义请求头内容"
 
+msgid "Delivered"
+msgstr "投递成功"
+
+msgid "Delivery"
+msgstr "投递"
+
+msgid "Delivery details"
+msgstr "投递详情"
+
 msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
 msgstr "投递失败，请检查服务商地址、凭据以及网络连接。"
 
+msgid "Delivery groups"
+msgstr "投递分组"
+
+msgid "Details"
+msgstr "详情"
+
 msgid "Detect unknown LAN devices"
 msgstr "发现未知局域网设备"
+
+msgid "Detected device MAC"
+msgstr "发现设备的 MAC 地址"
 
 msgid "Device MAC filter"
 msgstr "设备 MAC 地址过滤"
@@ -91,11 +172,20 @@ msgstr "钉钉"
 msgid "Disabled"
 msgstr "已禁用"
 
-msgid "Delivered"
-msgstr "投递成功"
+msgid "Disconnected network interface"
+msgstr "断开的网络接口"
+
+msgid "Discovery bridge"
+msgstr "发现设备的网桥"
 
 msgid "Display name"
 msgstr "显示名称"
+
+msgid "Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing."
+msgstr "每个渠道都有稳定的内部标识，删除其他渠道不会导致分组引用错乱。测试前请先保存并应用。"
+
+msgid "Each rule selects an event, its destinations and its own message template. No destination is selected automatically."
+msgstr "每条规则独立选择事件、投递目标以及消息模板；系统不会自动选择投递目标。"
 
 msgid "Enable HTTP message receiver"
 msgstr "启用 HTTP 消息接收端"
@@ -115,8 +205,14 @@ msgstr "请输入能响应探测的 IP 地址。连续多次探测失败后，�
 msgid "Event"
 msgstr "事件"
 
+msgid "Event ID"
+msgstr "事件标识"
+
 msgid "Event rules"
 msgstr "事件规则"
+
+msgid "Event severity"
+msgstr "事件级别"
 
 msgid "Event source filter"
 msgstr "事件来源过滤"
@@ -124,14 +220,17 @@ msgstr "事件来源过滤"
 msgid "External access (HTTPS required)"
 msgstr "允许外部访问（必须使用 HTTPS）"
 
+msgid "Failed login count"
+msgstr "登录失败次数"
+
 msgid "Failed login threshold"
 msgstr "登录失败次数阈值"
 
-msgid "Failed"
-msgstr "投递失败"
-
 msgid "Failed login time window (seconds)"
 msgstr "登录失败统计窗口（秒）"
+
+msgid "Failed; retry pending"
+msgstr "投递失败，等待重试"
 
 msgid "Feishu"
 msgstr "飞书"
@@ -144,6 +243,12 @@ msgstr "生成新令牌"
 
 msgid "Generic Webhook"
 msgstr "通用 Webhook"
+
+msgid "Group name"
+msgstr "分组名称"
+
+msgid "Group: "
+msgstr "分组："
 
 msgid "HTTP receiver"
 msgstr "HTTP 接收端"
@@ -178,6 +283,15 @@ msgstr "用于设备发现的 LAN 接口"
 msgid "LAN only"
 msgstr "仅局域网"
 
+msgid "Last source IP (if available)"
+msgstr "最近来源 IP（如可获取）"
+
+msgid "Load averages (1 / 5 / 15 minutes)"
+msgstr "平均负载（1／5／15 分钟）"
+
+msgid "Load threshold"
+msgstr "负载阈值"
+
 msgid "Load warning threshold"
 msgstr "系统负载告警阈值"
 
@@ -196,11 +310,20 @@ msgstr "最大投递尝试次数"
 msgid "Maximum queued deliveries"
 msgstr "最大待投递消息数"
 
+msgid "Member channels"
+msgstr "成员渠道"
+
+msgid "Memory threshold (MiB)"
+msgstr "内存阈值（MiB）"
+
 msgid "Message added to the delivery queue."
 msgstr "消息已加入投递队列。"
 
 msgid "Message body"
 msgstr "消息正文"
+
+msgid "Message body template"
+msgstr "消息正文模板"
 
 msgid "Minimum available memory (MiB)"
 msgstr "最低可用内存（MiB）"
@@ -211,11 +334,20 @@ msgstr "最低可用存储空间（MiB）"
 msgid "Minimum time between matching notifications. Set 0 to disable throttling."
 msgstr "相同规则两次通知之间的最短间隔。设为 0 则不限制发送频率。"
 
+msgid "Missing channel: "
+msgstr "渠道已不存在："
+
+msgid "Missing destination: "
+msgstr "投递目标已不存在："
+
 msgid "Monitor"
 msgstr "监测"
 
 msgid "Monitored devices"
 msgstr "监控设备"
+
+msgid "Network interface"
+msgstr "网络接口"
 
 msgid "Network interface filter"
 msgstr "网络接口过滤"
@@ -223,17 +355,29 @@ msgstr "网络接口过滤"
 msgid "Network monitoring"
 msgstr "网络监测"
 
+msgid "No channels or groups configured. Add a channel first."
+msgstr "尚未配置渠道或分组，请先新增通知渠道。"
+
 msgid "No delivery records yet."
 msgstr "暂无投递记录。"
 
+msgid "No member channels"
+msgstr "尚无成员渠道"
+
 msgid "Normal"
 msgstr "普通"
+
+msgid "Not configured"
+msgstr "尚未配置"
 
 msgid "Notification channels"
 msgstr "通知渠道"
 
 msgid "Notification rules"
 msgstr "通知规则"
+
+msgid "Notification time"
+msgstr "通知时间"
 
 msgid "Notification title"
 msgstr "通知标题"
@@ -247,6 +391,9 @@ msgstr "仅观察现有邻居表，不会主动扫描局域网。"
 msgid "Off by default. The endpoint is /cgi-bin/catos-notify and uses the existing uhttpd server. No firewall rules are added."
 msgstr "默认关闭。接收地址为 /cgi-bin/catos-notify，使用现有 uhttpd 服务，不会添加防火墙规则。"
 
+msgid "One-minute load average"
+msgstr "1 分钟平均负载"
+
 msgid "Only optional for LAN access. External access always requires a token, even if this switch is off."
 msgstr "仅在局域网范围内可以选择关闭认证。即使关闭此选项，外部访问仍必须携带令牌。"
 
@@ -259,6 +406,9 @@ msgstr "可选。仅匹配指定的 netifd 网络接口。"
 msgid "Optional. Match the exact source name supplied by an event publisher."
 msgstr "可选。仅匹配事件发布方指定的准确来源名称。"
 
+msgid "Original event details"
+msgstr "原始事件详情"
+
 msgid "Override severity"
 msgstr "覆盖事件级别"
 
@@ -267,6 +417,24 @@ msgstr "概览"
 
 msgid "Pending deliveries"
 msgstr "待投递消息"
+
+msgid "Previous IPv4 addresses (CIDR)"
+msgstr "变化前 IPv4 地址（CIDR）"
+
+msgid "Previous IPv6 addresses (CIDR)"
+msgstr "变化前 IPv6 地址（CIDR）"
+
+msgid "Previous default-route device"
+msgstr "切换前默认路由设备"
+
+msgid "Previous delegated prefixes (CIDR)"
+msgstr "变化前委派前缀（CIDR）"
+
+msgid "Previous public IPv4 address"
+msgstr "变化前公网 IPv4 地址"
+
+msgid "Previous public IPv6 address"
+msgstr "变化前公网 IPv6 地址"
 
 msgid "Probe IP address"
 msgstr "探测 IP 地址"
@@ -280,6 +448,9 @@ msgstr "服务商请求超时（秒）"
 msgid "Public IP check interval (seconds)"
 msgstr "公网 IP 检测间隔（秒）"
 
+msgid "Publisher name"
+msgstr "发布来源"
+
 msgid "PushGo channel ID"
 msgstr "PushGo 渠道 ID"
 
@@ -291,9 +462,6 @@ msgstr "投递队列已满"
 
 msgid "Queue message"
 msgstr "加入发送队列"
-
-msgid "Queued delivery"
-msgstr "后台投递"
 
 msgid "Receiver token"
 msgstr "接收端令牌"
@@ -313,11 +481,20 @@ msgstr "要求身份验证"
 msgid "Resource alerts"
 msgstr "资源告警"
 
+msgid "Restored network interface"
+msgstr "恢复的网络接口"
+
 msgid "Result"
 msgstr "结果"
 
+msgid "Retry limit reached"
+msgstr "重试次数已用尽"
+
 msgid "Router name"
 msgstr "路由器名称"
+
+msgid "Save & Apply before testing new channels or changed credentials."
+msgstr "新增渠道或修改凭据后，请先保存并应用，再发送测试。"
 
 msgid "Security · Repeated LuCI login failures"
 msgstr "安全 · LuCI 多次登录失败"
@@ -328,8 +505,20 @@ msgstr "安全 · SSH 多次登录失败"
 msgid "Select a built-in event or type an exact custom event ID, such as ddns.updated."
 msgstr "选择内置事件，或输入准确的自定义事件 ID，例如 ddns.updated。"
 
+msgid "Select any number of delivery groups and individual channels. An empty selection means this rule does not deliver."
+msgstr "可选择任意多个分组及单独渠道。未选择目标时，此规则不会发送通知。"
+
+msgid "Select at least one delivery destination."
+msgstr "请至少选择一个投递目标。"
+
+msgid "Select one or more destinations. Channels included through multiple selections receive only one copy."
+msgstr "选择一个或多个投递目标；重复选中的渠道只会接收一份。"
+
 msgid "Send a message"
 msgstr "发送消息"
+
+msgid "Send a one-off notification to explicitly selected channels and delivery groups."
+msgstr "向明确选中的通知渠道和投递分组发送一次性消息。"
 
 msgid "Send test"
 msgstr "发送测试"
@@ -361,8 +550,14 @@ msgstr "暂时无法获取服务状态。"
 msgid "Status summary interval (seconds)"
 msgstr "状态摘要间隔（秒）"
 
+msgid "Storage mount point"
+msgstr "存储挂载点"
+
 msgid "Storage mountpoint"
 msgstr "存储挂载点"
+
+msgid "Storage threshold (MiB)"
+msgstr "存储阈值（MiB）"
 
 msgid "System scan interval (seconds)"
 msgstr "系统扫描间隔（秒）"
@@ -379,11 +574,11 @@ msgstr "系统 · 启动完成"
 msgid "Telegram chat ID"
 msgstr "Telegram 会话 ID"
 
+msgid "Temperature threshold (°C)"
+msgstr "温度阈值（°C）"
+
 msgid "Test failed: "
 msgstr "测试失败："
-
-msgid "Test message"
-msgstr "测试消息"
 
 msgid "Test notification delivered."
 msgstr "测试通知已投递。"
@@ -393,6 +588,9 @@ msgstr "最近的投递尝试记录保存在内存中，路由器重启后会清
 
 msgid "The summary is delivered only when its event rule is enabled."
 msgstr "只有启用相应事件规则后，才会发送状态摘要。"
+
+msgid "This title template belongs only to this event rule."
+msgstr "此标题模板仅属于当前事件规则，不与其他规则共用。"
 
 msgid "Time"
 msgstr "时间"
@@ -415,14 +613,26 @@ msgstr "不可用"
 msgid "Unknown error"
 msgstr "未知错误"
 
+msgid "Uptime (seconds)"
+msgstr "运行时间（秒）"
+
 msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
 msgstr "请通过 X-CatOS-Token 请求头发送此密钥，并妥善保管。"
+
+msgid "Use {{body}} for the original event details."
+msgstr "使用 {{body}} 插入原始事件详情。"
 
 msgid "Used as the {{router}} variable in notification templates."
 msgstr "此名称会作为消息模板中的 {{router}} 变量。"
 
 msgid "Uses external IP lookup services. Disable this to stop those external requests."
 msgstr "该功能会请求外部公网 IP 查询服务。关闭后不再发起这些外部请求。"
+
+msgid "View content"
+msgstr "查看内容"
+
+msgid "WAN address summary"
+msgstr "WAN 地址摘要"
 
 msgid "WAN network interfaces"
 msgstr "WAN 网络接口"
@@ -460,92 +670,11 @@ msgstr "Webhook 签名密钥"
 msgid "You must also configure at least one enabled delivery channel and a matching event rule."
 msgstr "还需要至少配置一个已启用的通知渠道及匹配的事件规则。"
 
+msgid "e.g. Administrator devices"
+msgstr "例如：管理员设备"
+
 msgid "e.g. My phone"
 msgstr "例如：我的手机"
 
 msgid "ntfy topic"
 msgstr "ntfy 主题"
-
-msgid "A channel may be included in multiple groups. A group with no channels cannot deliver messages."
-msgstr "同一渠道可以加入多个投递分组。没有成员渠道的分组无法投递消息。"
-
-msgid "A delivery group contains one or more channels. Manage membership here; channels themselves do not belong to any default group."
-msgstr "投递分组可包含多个渠道，成员关系在这里管理。渠道本身不属于任何默认分组。"
-
-msgid "Available variables for this event"
-msgstr "此事件可用的模板变量"
-
-msgid "Channel: "
-msgstr "渠道："
-
-msgid "Choose channels and/or groups under Delivery. If a channel is selected both directly and through a group, it receives one message."
-msgstr "在“投递”中选择渠道和／或分组。若同一渠道被直接选中且包含在分组中，也只会接收一份消息。"
-
-msgid "Configure a delivery destination here. Delivery groups maintain their own channel membership."
-msgstr "在这里配置通知目的地。投递分组单独管理自己的成员渠道。"
-
-msgid "Configured delivery groups"
-msgstr "已配置的投递分组"
-
-msgid "Delivery"
-msgstr "投递"
-
-msgid "Delivery groups"
-msgstr "投递分组"
-
-msgid "Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing."
-msgstr "每个渠道都有稳定的内部标识，删除其他渠道不会导致分组引用错乱。测试前请先保存并应用。"
-
-msgid "Each rule selects an event, its destinations and its own message template. No destination is selected automatically."
-msgstr "每条规则独立选择事件、投递目标以及消息模板；系统不会自动选择投递目标。"
-
-msgid "Group name"
-msgstr "分组名称"
-
-msgid "Group: "
-msgstr "分组："
-
-msgid "Member channels"
-msgstr "成员渠道"
-
-msgid "Message body template"
-msgstr "消息正文模板"
-
-msgid "Missing channel: "
-msgstr "渠道已不存在："
-
-msgid "Missing destination: "
-msgstr "投递目标已不存在："
-
-msgid "No channels or groups configured. Add a channel first."
-msgstr "尚未配置渠道或分组，请先新增通知渠道。"
-
-msgid "No member channels"
-msgstr "尚无成员渠道"
-
-msgid "Not configured"
-msgstr "尚未配置"
-
-msgid "Save & Apply before testing new channels or changed credentials."
-msgstr "新增渠道或修改凭据后，请先保存并应用，再发送测试。"
-
-msgid "Select any number of delivery groups and individual channels. An empty selection means this rule does not deliver."
-msgstr "可选择任意多个分组及单独渠道。未选择目标时，此规则不会发送通知。"
-
-msgid "Select at least one delivery destination."
-msgstr "请至少选择一个投递目标。"
-
-msgid "Select one or more destinations. Channels included through multiple selections receive only one copy."
-msgstr "选择一个或多个投递目标；重复选中的渠道只会接收一份。"
-
-msgid "Send a one-off notification to explicitly selected channels and delivery groups."
-msgstr "向明确选中的通知渠道和投递分组发送一次性消息。"
-
-msgid "This title template belongs only to this event rule."
-msgstr "此标题模板仅属于当前事件规则，不与其他规则共用。"
-
-msgid "Use {{body}} for the event details. Extra flat variables from the event data are also available."
-msgstr "使用 {{body}} 插入事件详情，也可以使用事件数据中提供的其他平面变量。"
-
-msgid "e.g. Administrator devices"
-msgstr "例如：管理员设备"

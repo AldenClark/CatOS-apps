@@ -18,6 +18,7 @@ return view.extend({
 			_('Configure a delivery destination here. Delivery groups maintain their own channel membership.'));
 		var s = m.section(form.GridSection, 'channel', _('Configured channels'));
 		s.addremove = true;
+		s.nodescriptions = true;
 		s.anonymous = true;
 		s.description = _('Each channel has a permanent internal ID so group references remain safe when other channels are removed. Save & Apply before testing.');
 		// LuCI normally creates anonymous @channel[index] sections. Such indices
@@ -34,14 +35,17 @@ return view.extend({
 		};
 
 		var o = s.option(form.Flag, 'enabled', _('Enabled'));
+		o.width = '5rem';
 		o.default = '1';
 		o.rmempty = false;
 
 		o = s.option(form.Value, 'name', _('Display name'));
+		o.width = '45%';
 		o.rmempty = false;
 		o.placeholder = _('e.g. My phone');
 
 		o = s.option(form.ListValue, 'type', _('Provider'));
+		o.width = '25%';
 		[
 			[ 'bark', 'Bark' ], [ 'pushgo', 'PushGo' ], [ 'ntfy', 'ntfy' ],
 			[ 'feishu', _('Feishu') ], [ 'dingtalk', _('DingTalk') ],
@@ -101,12 +105,22 @@ return view.extend({
 
 		o = s.option(form.Button, '_test', _('Send test'));
 		o.inputstyle = 'apply';
-		// Only offer testing in the channel list, after leaving the edit modal.
-		// The backend reads committed UCI; staged changes must be applied first.
-		o.modalonly = false;
+		// The backend uses saved credentials. Compare every editor value too:
+		// uci.changes() alone cannot see edits still inside an open modal.
+		o.modalonly = true;
+		o.inputtitle = _('Send test');
 		o.onclick = function(ev, sectionId) {
+			var button = ev.currentTarget;
+			var dirty = this.section.children.some(function(option) {
+				if (option.option === '_test' || !option.isActive(sectionId)) return false;
+				var value = option.formvalue(sectionId);
+				var saved = option.cfgvalue(sectionId);
+				if (saved == null) saved = option.default;
+				return value != null && String(value) !== String(saved || '');
+			});
+			button.disabled = true;
 			return uci.changes().then(function(changes) {
-				if (changes.catos_notify && changes.catos_notify.length) {
+				if (dirty || (changes.catos_notify && changes.catos_notify.length)) {
 					ui.addNotification(null, E('p', {},
 						_('Save & Apply before testing new channels or changed credentials.')),
 						'warning');
@@ -129,9 +143,17 @@ return view.extend({
 				})
 				.catch(function(err) {
 					ui.addNotification(null, E('p', {}, _('Request failed: ') + err.message), 'danger');
-				});
+				}).finally(function() { button.disabled = false; });
 		};
 
-		return m.render();
+		return m.render().then(function(node) {
+			node.classList.add('catos-notify-page', 'catos-notify-channels');
+			// Argon overrides native column widths with width:auto !important.
+			node.querySelectorAll('thead th').forEach(function(cell) {
+				if (cell.style.width) cell.style.setProperty('width', cell.style.width, 'important');
+			});
+			node.prepend(E('link', { rel: 'stylesheet', href: L.resource('view/catos/notify/overview.css') }));
+			return node;
+		});
 	}
 });

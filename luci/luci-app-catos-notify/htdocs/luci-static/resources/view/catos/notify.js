@@ -68,7 +68,7 @@ function targetsField() {
 		var checkbox = E('input', { 'type': 'checkbox', 'value': choice[0] });
 		return {
 			input: checkbox,
-			row: E('label', { 'class': 'catos-notify-target-item' }, [ checkbox, E('span', {}, choice[1]) ])
+			row: E('label', { 'class': 'catos-notify-target-item' }, [ checkbox, E('span', {}, [ choice[1] ]) ])
 		};
 	});
 	return {
@@ -89,36 +89,49 @@ function historyTable(records) {
 	if (!Array.isArray(records) || !records.length)
 		return E('p', {}, _('No delivery records yet.'));
 
+	var results = { success: _('Delivered'), failed: _('Failed; retry pending'),
+		exhausted: _('Retry limit reached'), queue_full: _('Queue full') };
 	var rows = records.slice().reverse().map(function(record) {
-		var fields = String(record).split('|');
-		var date = Number(fields[0]);
-		var results = {
-			'success': _('Delivered'),
-			'failed': _('Failed'),
-			'queue_full': _('Queue full')
-		};
-		var events = {
-			'queued': _('Queued delivery'),
-			'test': _('Test message')
-		};
-		return E('tr', {}, [
-			E('td', {}, Number.isFinite(date) && date > 0
-				? new Date(date * 1000).toLocaleString() : '-'),
-			E('td', {}, fields[1] || '-'),
-			E('td', {}, results[fields[2]] || fields[2] || '-'),
-			E('td', {}, events[fields[3]] || fields[3] || '-')
+		// Older installed cores return delimiter-separated metadata without content.
+		if (typeof record === 'string') {
+			var fields = record.split('|');
+			record = { time: fields[0], result: fields[2], event: fields[3] };
+		}
+		var date = Number(record.time);
+		var time = Number.isFinite(date) && date > 0 ? new Date(date * 1000).toLocaleString() : '-';
+		var result = results[record.result] || record.result || '-';
+		var preview = record.title || _('Content unavailable');
+		return E('tr', { 'class': 'tr' }, [
+			E('td', { 'class': 'td' }, [ time ]),
+			E('td', { 'class': 'td' }, [ preview ]),
+			E('td', { 'class': 'td' }, [ result ]),
+			E('td', { 'class': 'td' }, E('button', {
+				type: 'button', 'class': 'btn cbi-button',
+				click: function() {
+					ui.showModal(_('Delivery details'), [
+						E('p', {}, [ time + ' · ' + result ]),
+						E('p', {}, [ _('Event') + ': ' + (record.event || '-') ]),
+						E('h5', {}, _('Title')),
+						E('div', { 'class': 'catos-notify-content' }, [ record.title || _('Content unavailable') ]),
+						E('h5', {}, _('Message body')),
+						E('div', { 'class': 'catos-notify-content' }, [ record.body == null ? _('Content unavailable') : record.body ]),
+						E('div', { 'class': 'right' }, E('button', {
+							type: 'button', 'class': 'btn cbi-button', click: ui.hideModal
+						}, _('Close')))
+					]);
+				}
+			}, _('View content')))
 		]);
 	});
-
-	return E('div', { 'style': 'overflow-x: auto' },
-		E('table', { 'class': 'table' }, [
-			E('tr', { 'class': 'tr table-titles' }, [
+	return E('div', { 'class': 'catos-notify-table-scroll' },
+		E('table', { 'class': 'table catos-notify-history' }, [
+			E('thead', {}, E('tr', { 'class': 'tr table-titles' }, [
 				E('th', { 'class': 'th' }, _('Time')),
-				E('th', { 'class': 'th' }, _('Channel')),
+				E('th', { 'class': 'th' }, _('Title')),
 				E('th', { 'class': 'th' }, _('Result')),
-				E('th', { 'class': 'th' }, _('Event'))
-			]),
-		].concat(rows)));
+				E('th', { 'class': 'th' }, _('Details'))
+			])), E('tbody', {}, rows)
+		]));
 }
 
 return view.extend({
@@ -133,7 +146,7 @@ return view.extend({
 		var body = messageField('body', _('Message body'), 'textarea');
 		var targets = targetsField();
 
-		return E('div', {}, [
+		return E('div', { 'class': 'catos-notify-page' }, [
 			E('link', { 'rel': 'stylesheet', 'href': L.resource('view/catos/notify/overview.css') }),
 			E('h2', {}, _('CatOS Notify')),
 			E('p', {}, _('Configure delivery channels first, then select which events should send notifications.')),
