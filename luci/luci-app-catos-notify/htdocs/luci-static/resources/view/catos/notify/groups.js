@@ -26,6 +26,7 @@ return view.extend({
 			_('A delivery group contains one or more channels. Manage membership here; channels themselves do not belong to any default group.'));
 		var s = m.section(form.GridSection, 'group', _('Configured delivery groups'));
 		s.addremove = true;
+		s.nodescriptions = true;
 		s.anonymous = true;
 		s.description = _('A channel may be included in multiple groups. A group with no channels cannot deliver messages.');
 
@@ -40,10 +41,12 @@ return view.extend({
 		};
 
 		var o = s.option(form.Value, 'name', _('Group name'));
+		o.width = '30%';
 		o.rmempty = false;
 		o.placeholder = _('e.g. Administrator devices');
 
 		o = s.option(form.MultiValue, 'channels', _('Member channels'));
+		o.width = '55%';
 		o.rmempty = true;
 		o.create = false;
 		channels.forEach(function(channel) {
@@ -58,6 +61,14 @@ return view.extend({
 			return '%h'.format(value || _('No member channels'));
 		};
 
-		return m.render();
+		return m.render().then(function(node) {
+			node.classList.add('catos-notify-page', 'catos-notify-groups');
+			// Argon overrides native column widths with width:auto !important.
+			node.querySelectorAll('thead th').forEach(function(cell) {
+				if (cell.style.width) cell.style.setProperty('width', cell.style.width, 'important');
+			});
+			node.prepend(E('link', { rel: 'stylesheet', href: L.resource('view/catos/notify/overview.css') }));
+			return node;
+		});
 	}
 });

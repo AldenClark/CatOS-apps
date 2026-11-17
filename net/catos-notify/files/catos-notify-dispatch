@@ -58,17 +58,25 @@ read_input() {
 	[ "${#INPUT}" -le "$MAX_INPUT" ] && valid_json "$INPUT"
 }
 
-clean_line() {
-	printf '%s' "$1" | tr '\r\n\t|' '    ' | cut -c 1-180
-}
-
 history() {
-	local line
-	line="$(date +%s)|$(clean_line "$1")|$(clean_line "$2")|$(clean_line "$3")"
-	printf '%s\n' "$line" >> "$RUN/history"
-	if [ "$(wc -l < "$RUN/history")" -gt 150 ]; then
-		tail -n 100 "$RUN/history" > "$RUN/history.new"
-		mv -f "$RUN/history.new" "$RUN/history"
+	local record
+	# Isolate jshn state: callers may still need the loaded queue payload.
+	record="$(
+		json_init
+		json_add_int time "$(date +%s)"
+		json_add_string result "$2"
+		json_add_string event "$3"
+		json_add_string title "$4"
+		json_add_string body "$5"
+		json_dump
+	)"
+	# One append per record, no shared rotation temp file between test/flush.
+	printf '%s\n' "$record" >> "$RUN/history.jsonl"
+	if [ "$(wc -l < "$RUN/history.jsonl")" -gt 100 ]; then
+		local tmp
+		tmp="$(mktemp "$RUN/history.XXXXXXXX")" || return
+		tail -n 80 "$RUN/history.jsonl" > "$tmp"
+		mv -f "$tmp" "$RUN/history.jsonl"
 	fi
 }
 
@@ -153,7 +161,7 @@ queue_channel() {
 	if queue_target "$section" "$TITLE" "$BODY" "$SEVERITY" "$EVENT"; then
 		DELIVERY_COUNT=$((DELIVERY_COUNT + 1))
 	else
-		history "$section" queue_full "$EVENT"
+		history "$section" queue_full "$EVENT" "$TITLE" "$BODY"
 	fi
 }
 
@@ -316,10 +324,12 @@ do_test() {
 	json_add_string severity normal
 	response="$(json_dump)"
 	if printf '%s' "$response" | /usr/libexec/catos-notify/providers "$channel"; then
-		history "$channel" success test
+		init_run || return 1
+		history "$channel" success test "$title" "$body"
 		json_reply 1 delivered
 	else
-		history "$channel" failed test
+		init_run || return 1
+		history "$channel" failed test "$title" "$body"
 		json_reply 0 delivery_failed
 		return 1
 	fi
@@ -339,7 +349,7 @@ all_wans_down() {
 }
 
 flush_queue() {
-	local file channel payload attempts maximum status now next processed=0
+	local file channel payload title body event attempts maximum status now next processed=0
 	init_run || return 1
 	mkdir "$RUN/lock" 2>/dev/null || return 0
 	trap 'rmdir "$RUN/lock" 2>/dev/null' EXIT INT TERM
@@ -361,6 +371,9 @@ flush_queue() {
 			continue
 		fi
 		json_get_var channel channel
+		json_get_var title title
+		json_get_var body body
+		json_get_var event event
 		status=failed
 		if printf '%s' "$payload" | /usr/libexec/catos-notify/providers "$channel"; then
 			status=success
@@ -377,7 +390,7 @@ flush_queue() {
 				printf '%s' "$((now + attempts * attempts * 30))" > "${file%.json}.next"
 			fi
 		fi
-		history "$channel" "$status" queued
+		history "$channel" "$status" "$event" "$title" "$body"
 	done
 }
 
@@ -391,12 +404,30 @@ show_status() {
 		json_add_boolean enabled 0
 	json_add_int queued "$queued"
 	json_add_array history
-	if [ -f "$RUN/history" ]; then
-		local history_file="$RUN/history"
+	if [ -f "$RUN/history.jsonl" ]; then
+		local history_file="$RUN/history.jsonl"
 		local lines
 		lines="$(tail -n 20 "$history_file")"
 		while IFS= read -r line; do
-			[ -n "$line" ] && json_add_string '' "$line"
+			[ -n "$line" ] || continue
+			local key value namespace
+			json_set_namespace catos_history_ namespace
+			if ! json_load "$line"; then
+				json_set_namespace "$namespace"
+				continue
+			fi
+			json_set_namespace "$namespace"
+			json_add_object ''
+			for key in time result event title body; do
+				json_set_namespace catos_history_
+				json_get_var value "$key"
+				json_set_namespace "$namespace"
+				json_add_string "$key" "$value"
+			done
+			json_set_namespace catos_history_
+			json_cleanup
+			json_set_namespace "$namespace"
+			json_close_object
 		done <<-EOF
 		$lines
 		EOF

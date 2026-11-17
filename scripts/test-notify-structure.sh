@@ -162,18 +162,20 @@ for (const [script, name] of [[uiChannels, 'enabled'], [uiRules, 'enabled'], [ui
   assert(new RegExp("option\\(form\\.Flag, '" + name + "'[\\s\\S]{0,140}?o\\.default = '1';\\s*o\\.rmempty = false;").test(script),
     `Default-on ${name} checkbox must persist its explicit value`);
 }
-assert(uiChannels.includes("o.modalonly = false;"), 'Channel test must be outside the edit dialog');
+assert(/s.option\(form.Button, '_test'[\s\S]*?o.modalonly = true;/.test(uiChannels), 'Channel test must be in the edit dialog');
 assert(uiChannels.includes('uci.changes().then('), 'Channel test must reject un-applied UCI changes');
 console.log('CatOS Notify: 20 events, 8 providers, secure defaults and shell/JS syntax verified.');
 NODE
 
 node - <<'NODE'
+globalThis.L = {resource: p => p};
+globalThis.E = () => ({});
 const assert = require('assert');
 const fs = require('fs');
 const base = 'luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/';
 const groupSource = fs.readFileSync(base + 'groups.js', 'utf8');
 const channelSource = fs.readFileSync(base + 'channels.js', 'utf8');
-function inspectView(source, type) {
+async function inspectView(source, type) {
   let section, addedId;
   const options = [];
   const form = {
@@ -188,7 +190,7 @@ function inspectView(source, type) {
           return result;
         }
       };
-      this.render = () => options;
+      this.render = () => Promise.resolve(Object.assign(options, {classList: {add() {}}, prepend() {}, querySelectorAll() {return []}}));
     },
     GridSection: function(){}, Flag: function(){}, Value: function(){},
     ListValue: function(){}, MultiValue: function(){}, Button: function(){}
@@ -197,20 +199,24 @@ function inspectView(source, type) {
   const rpc = {declare: () => () => Promise.resolve({ok:true})};
   const app = Function('view','form','uci','rpc','ui','_',source)(
     {extend: v=>v}, form, uci, rpc, {addNotification:()=>{}}, s=>s);
-  app.render();
+  await app.render();
   section.handleAdd({});
   assert(new RegExp(`^${type}_[a-z0-9_]+$`).test(addedId), `${type} must use a stable named UCI section`);
   return options;
 }
-const groups = inspectView(groupSource, 'group');
+(async () => {
+const groups = await inspectView(groupSource, 'group');
 assert.deepEqual(groups.find(o => o.key === 'channels').values, [['phone', 'My phone']]);
 assert(!groups.some(o => o.key === 'group'), 'Group members must be configured on the group itself');
-const channels = inspectView(channelSource, 'channel');
+const channels = await inspectView(channelSource, 'channel');
 assert(!channels.some(o => o.key === 'group'), 'Channel editor must have no group input');
 console.log('CatOS Notify: stable channel/group section IDs and group-member selector verified.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
 NODE
 
 node - <<'NODE'
+globalThis.L = {resource: p => p};
+globalThis.E = () => ({});
 const assert = require('assert');
 const fs = require('fs');
 const source = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/rules.js', 'utf8');
@@ -218,7 +224,7 @@ const source = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/re
 String.prototype.format = function(value) {
   return this.replace('%h', String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'));
 };
-function renderRules(translate) {
+async function renderRules(translate) {
   const options = [];
   let storedEvent = '';
 const section = {option(_type, key, title) {
@@ -227,7 +233,7 @@ const section = {option(_type, key, title) {
     return option;
   }};
   const form = {
-    Map: function() { this.section = () => section; this.render = () => options; },
+    Map: function() { this.section = () => section; this.render = () => Promise.resolve(Object.assign(options, {classList: {add() {}}, prepend() {}, querySelectorAll() {return []}})); },
     GridSection: function(){}, Flag: function(){}, Value: function(){}, ListValue: function(){},
     MultiValue: function(){}, TextValue: function(){}, DummyValue: function(){}
   };
@@ -236,11 +242,12 @@ const section = {option(_type, key, title) {
     get: () => 'wan.down'
   };
   const view = Function('view', 'form', 'uci', '_', source)({extend: o => o}, form, uci, translate);
-  const result = view.render();
+  const result = await view.render();
   return {event: result.find(o => o.key === 'event'), delivery: result.find(o => o.key === 'targets'),
     vars: result.find(o => o.key === '_variables'), setStoredEvent: id => { storedEvent = id; }};
 }
-const english = renderRules(s => s);
+(async () => {
+const english = await renderRules(s => s);
 assert.equal(english.event.title, 'Event', 'Grid column should describe an event, not expose its storage ID');
 for (const [id, label] of english.event.values) {
   english.setStoredEvent(id);
@@ -252,14 +259,17 @@ english.setStoredEvent('<unsafe.event>');
 assert.equal(english.event.textvalue('sample'), '&lt;unsafe.event&gt;', 'Custom event IDs must be HTML-escaped');
 assert.deepEqual(english.delivery.values.map(v => v[0]), ['group:admins', 'channel:phone'], 'Delivery selector must include both groups and channels');
 assert.equal(english.delivery.textvalue('sample'), 'Group: Administrators, Channel: Phone');
-assert(english.vars.cfgvalue('sample').includes('{{old}}'), 'Event variables help must include event-specific fields');
-const chinese = renderRules(s => s === 'WAN · Disconnected' ? 'WAN · 连接断开' : s);
+
+const chinese = await renderRules(s => s === 'WAN · Disconnected' ? 'WAN · 连接断开' : s);
 chinese.setStoredEvent('wan.down');
 assert.equal(chinese.event.textvalue('sample'), 'WAN · 连接断开', 'Grid label must follow LuCI language');
 console.log('CatOS Notify: all event IDs display translated labels while retaining raw UCI IDs.');
+})().catch(error => { console.error(error); process.exitCode = 1; });
 NODE
 
 node - <<'NODE'
+globalThis.L = {resource: p => p};
+globalThis.E = () => ({});
 const fs = require('fs');
 const assert = require('assert');
 const app = 'luci/luci-app-catos-notify';
@@ -355,4 +365,33 @@ body.value = 'Example';
   assert(notifications.length >= 2, 'Validation and success feedback must be shown');
   console.log('CatOS Notify: overview composer structure, responsive CSS and button flow verified.');
 })().catch(error => { console.error(error); process.exitCode = 1; });
+NODE
+
+node - <<'NODE'
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const source = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify/rules.js', 'utf8');
+const variables = Function('_', source.slice(0, source.indexOf('\nreturn view.extend')) + '\nreturn templateVariables;')(s => s);
+const keys = event => variables(event).map(v => v[0]);
+assert(keys('auth.ssh.failed').includes('count'));
+assert(!keys('auth.ssh.failed').includes('interface'));
+assert(keys('health.cpu_temp.high').includes('threshold'));
+assert(!keys('health.cpu_temp.high').includes('device'));
+assert(keys('device.known.online').includes('ip'));
+assert(!keys('public.ipv4.changed').includes('interface'));
+assert(!keys('system.boot').includes('old'));
+assert.deepEqual(keys('custom.event'), ['router','time','event','source','severity','body']);
+assert(variables('system.summary').every(v => v.length === 2 && v[1]), 'Every variable must have a semantic label');
+const overview = fs.readFileSync('luci/luci-app-catos-notify/htdocs/luci-static/resources/view/catos/notify.js', 'utf8');
+let modal;
+const E = (tag, attrs, children) => ({tag, attrs, children});
+const ui = {showModal: (_title, contents) => {modal = contents;}, hideModal() {}};
+const table = Function('E','_','ui', overview.slice(overview.indexOf('function historyTable'), overview.indexOf('\nreturn view.extend')) + '\nreturn historyTable;')(E, s => s, ui);
+const tree = table([{time:1,result:'success',event:'<event>',title:'<title>',body:'<b>literal</b>\nline'}]);
+const rows = tree.children.children[1].children;
+assert.deepEqual(rows[0].children[1].children, ['<title>'], 'History titles must render as text nodes in LuCI');
+rows[0].children[3].children.attrs.click();
+assert.deepEqual(modal[3].children, ['<title>']);
+assert.deepEqual(modal[5].children, ['<b>literal</b>\nline'], 'Delivery bodies must not be interpreted as HTML');
+console.log('CatOS Notify: event-specific variables and literal delivery-detail text verified.');
 NODE

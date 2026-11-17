@@ -15,7 +15,10 @@ msgstr ""
 msgid "Allowed source"
 msgstr ""
 
-msgid "Available variables for this event"
+msgid "Available memory (MiB)"
+msgstr ""
+
+msgid "Available storage (MiB)"
 msgstr ""
 
 msgid "Bark device / WeCom key"
@@ -24,13 +27,13 @@ msgstr ""
 msgid "Bot token / API bearer token"
 msgstr ""
 
+msgid "CPU temperature (°C)"
+msgstr ""
+
 msgid "CPU temperature warning (°C)"
 msgstr ""
 
 msgid "CatOS Notify"
-msgstr ""
-
-msgid "Channel"
 msgstr ""
 
 msgid "Channel not found. Save & Apply before testing."
@@ -48,6 +51,12 @@ msgstr ""
 msgid "Choose channels and/or groups under Delivery. If a channel is selected both directly and through a group, it receives one message."
 msgstr ""
 
+msgid "Click a variable to insert it at the cursor in this template."
+msgstr ""
+
+msgid "Close"
+msgstr ""
+
 msgid "Configure a delivery destination here. Delivery groups maintain their own channel membership."
 msgstr ""
 
@@ -63,6 +72,15 @@ msgstr ""
 msgid "Configured delivery groups"
 msgstr ""
 
+msgid "Configured device MAC (if set)"
+msgstr ""
+
+msgid "Configured device name"
+msgstr ""
+
+msgid "Content unavailable"
+msgstr ""
+
 msgid "Control service operation, event collection, resource thresholds and the optional HTTP receiver."
 msgstr ""
 
@@ -72,10 +90,34 @@ msgstr ""
 msgid "Could not queue message: "
 msgstr ""
 
+msgid "Counting window (seconds)"
+msgstr ""
+
 msgid "Counts recent failed SSH and LuCI login attempts. Enable the corresponding event rules to receive alerts."
 msgstr ""
 
 msgid "Critical"
+msgstr ""
+
+msgid "Current IPv4 addresses (CIDR)"
+msgstr ""
+
+msgid "Current IPv6 addresses (CIDR)"
+msgstr ""
+
+msgid "Current default-route device"
+msgstr ""
+
+msgid "Current delegated prefixes (CIDR)"
+msgstr ""
+
+msgid "Current public IPv4 address"
+msgstr ""
+
+msgid "Current public IPv6 address"
+msgstr ""
+
+msgid "Custom event variables depend on its publisher. Add flat data keys as {{key}}; only common variables are listed here."
 msgstr ""
 
 msgid "Custom header name"
@@ -90,13 +132,22 @@ msgstr ""
 msgid "Delivery"
 msgstr ""
 
+msgid "Delivery details"
+msgstr ""
+
 msgid "Delivery failed. Check the provider URL, credentials and network connectivity."
 msgstr ""
 
 msgid "Delivery groups"
 msgstr ""
 
+msgid "Details"
+msgstr ""
+
 msgid "Detect unknown LAN devices"
+msgstr ""
+
+msgid "Detected device MAC"
 msgstr ""
 
 msgid "Device MAC filter"
@@ -118,6 +169,12 @@ msgid "DingTalk"
 msgstr ""
 
 msgid "Disabled"
+msgstr ""
+
+msgid "Disconnected network interface"
+msgstr ""
+
+msgid "Discovery bridge"
 msgstr ""
 
 msgid "Display name"
@@ -147,7 +204,13 @@ msgstr ""
 msgid "Event"
 msgstr ""
 
+msgid "Event ID"
+msgstr ""
+
 msgid "Event rules"
+msgstr ""
+
+msgid "Event severity"
 msgstr ""
 
 msgid "Event source filter"
@@ -156,13 +219,16 @@ msgstr ""
 msgid "External access (HTTPS required)"
 msgstr ""
 
-msgid "Failed"
+msgid "Failed login count"
 msgstr ""
 
 msgid "Failed login threshold"
 msgstr ""
 
 msgid "Failed login time window (seconds)"
+msgstr ""
+
+msgid "Failed; retry pending"
 msgstr ""
 
 msgid "Feishu"
@@ -216,6 +282,15 @@ msgstr ""
 msgid "LAN only"
 msgstr ""
 
+msgid "Last source IP (if available)"
+msgstr ""
+
+msgid "Load averages (1 / 5 / 15 minutes)"
+msgstr ""
+
+msgid "Load threshold"
+msgstr ""
+
 msgid "Load warning threshold"
 msgstr ""
 
@@ -235,6 +310,9 @@ msgid "Maximum queued deliveries"
 msgstr ""
 
 msgid "Member channels"
+msgstr ""
+
+msgid "Memory threshold (MiB)"
 msgstr ""
 
 msgid "Message added to the delivery queue."
@@ -267,6 +345,9 @@ msgstr ""
 msgid "Monitored devices"
 msgstr ""
 
+msgid "Network interface"
+msgstr ""
+
 msgid "Network interface filter"
 msgstr ""
 
@@ -294,6 +375,9 @@ msgstr ""
 msgid "Notification rules"
 msgstr ""
 
+msgid "Notification time"
+msgstr ""
+
 msgid "Notification title"
 msgstr ""
 
@@ -304,6 +388,9 @@ msgid "Observes the existing neighbor table; it does not actively scan the LAN."
 msgstr ""
 
 msgid "Off by default. The endpoint is /cgi-bin/catos-notify and uses the existing uhttpd server. No firewall rules are added."
+msgstr ""
+
+msgid "One-minute load average"
 msgstr ""
 
 msgid "Only optional for LAN access. External access always requires a token, even if this switch is off."
@@ -318,6 +405,9 @@ msgstr ""
 msgid "Optional. Match the exact source name supplied by an event publisher."
 msgstr ""
 
+msgid "Original event details"
+msgstr ""
+
 msgid "Override severity"
 msgstr ""
 
@@ -325,6 +415,24 @@ msgid "Overview"
 msgstr ""
 
 msgid "Pending deliveries"
+msgstr ""
+
+msgid "Previous IPv4 addresses (CIDR)"
+msgstr ""
+
+msgid "Previous IPv6 addresses (CIDR)"
+msgstr ""
+
+msgid "Previous default-route device"
+msgstr ""
+
+msgid "Previous delegated prefixes (CIDR)"
+msgstr ""
+
+msgid "Previous public IPv4 address"
+msgstr ""
+
+msgid "Previous public IPv6 address"
 msgstr ""
 
 msgid "Probe IP address"
@@ -339,6 +447,9 @@ msgstr ""
 msgid "Public IP check interval (seconds)"
 msgstr ""
 
+msgid "Publisher name"
+msgstr ""
+
 msgid "PushGo channel ID"
 msgstr ""
 
@@ -349,9 +460,6 @@ msgid "Queue full"
 msgstr ""
 
 msgid "Queue message"
-msgstr ""
-
-msgid "Queued delivery"
 msgstr ""
 
 msgid "Receiver token"
@@ -372,7 +480,13 @@ msgstr ""
 msgid "Resource alerts"
 msgstr ""
 
+msgid "Restored network interface"
+msgstr ""
+
 msgid "Result"
+msgstr ""
+
+msgid "Retry limit reached"
 msgstr ""
 
 msgid "Router name"
@@ -435,7 +549,13 @@ msgstr ""
 msgid "Status summary interval (seconds)"
 msgstr ""
 
+msgid "Storage mount point"
+msgstr ""
+
 msgid "Storage mountpoint"
+msgstr ""
+
+msgid "Storage threshold (MiB)"
 msgstr ""
 
 msgid "System scan interval (seconds)"
@@ -453,10 +573,10 @@ msgstr ""
 msgid "Telegram chat ID"
 msgstr ""
 
-msgid "Test failed: "
+msgid "Temperature threshold (°C)"
 msgstr ""
 
-msgid "Test message"
+msgid "Test failed: "
 msgstr ""
 
 msgid "Test notification delivered."
@@ -492,16 +612,25 @@ msgstr ""
 msgid "Unknown error"
 msgstr ""
 
+msgid "Uptime (seconds)"
+msgstr ""
+
 msgid "Use this secret in the X-CatOS-Token request header. Store it securely."
 msgstr ""
 
-msgid "Use {{body}} for the event details. Extra flat variables from the event data are also available."
+msgid "Use {{body}} for the original event details."
 msgstr ""
 
 msgid "Used as the {{router}} variable in notification templates."
 msgstr ""
 
 msgid "Uses external IP lookup services. Disable this to stop those external requests."
+msgstr ""
+
+msgid "View content"
+msgstr ""
+
+msgid "WAN address summary"
 msgstr ""
 
 msgid "WAN network interfaces"

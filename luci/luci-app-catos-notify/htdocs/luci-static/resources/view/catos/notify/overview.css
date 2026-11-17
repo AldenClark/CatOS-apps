@@ -88,3 +88,82 @@
 		display: none;
 	}
 }
+
+/* Scope theme overrides to Notify. Native table layout keeps header/data widths equal. */
+.catos-notify-page .cbi-tblsection,
+.catos-notify-table-scroll {
+	overflow-x: auto;
+}
+.catos-notify-page table.table {
+	display: table !important;
+	table-layout: fixed;
+	width: 100%;
+	min-width: 640px;
+}
+.catos-notify-page table.table thead { display: table-header-group !important; }
+.catos-notify-page table.table tbody { display: table-row-group !important; }
+.catos-notify-page table.table tfoot { display: table-footer-group !important; }
+.catos-notify-page table.table tr { display: table-row !important; }
+.catos-notify-page table.table tr > th,
+.catos-notify-page table.table tr > td {
+	display: table-cell !important;
+	text-align: left !important;
+	vertical-align: middle;
+	padding: 12px 16px;
+	overflow-wrap: anywhere;
+	white-space: normal;
+}
+.catos-notify-page table.table tr > td::before { display: none !important; }
+.catos-notify-page table.table .cbi-section-actions { width: 10rem !important; min-width: 10rem; white-space: nowrap; }
+.catos-notify-page table.table .cbi-section-actions > div { display: flex; gap: 8px; justify-content: flex-end; }
+.catos-notify-rules table.table { min-width: 940px; }
+.catos-notify-history th:nth-child(1) { width: 12rem; }
+.catos-notify-history th:nth-child(2) { width: auto; }
+.catos-notify-history th:nth-child(3) { width: 10rem; }
+.catos-notify-history th:nth-child(4) { width: 8rem; }
+/* Argon adds checkbox positioning and label padding; reset both as one flex row. */
+.catos-notify-compose .catos-notify-target-item {
+	display: flex !important;
+	align-items: center;
+	position: static;
+	padding: 0;
+	margin: 0;
+	line-height: 1.5;
+}
+.catos-notify-compose .catos-notify-target-item input[type="checkbox"] {
+	position: static !important;
+	transform: none !important;
+	top: auto;
+	left: auto;
+	width: 16px !important;
+	height: 16px !important;
+	min-height: 0;
+	margin: 0 !important;
+	padding: 0;
+	align-self: center;
+}
+.catos-notify-compose .catos-notify-target-item span { display: block; margin: 0; padding: 0; }
+.catos-notify-variables { margin-top: 8px; max-width: 100%; }
+.catos-notify-variable {
+	display: inline-flex;
+	align-items: baseline;
+	flex-wrap: wrap;
+	gap: 4px 8px;
+	margin: 0 6px 6px 0;
+	padding: 5px 8px;
+	border: 1px solid var(--border-color-medium, #d4d8df);
+	border-radius: 5px;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+.catos-notify-variable:hover, .catos-notify-variable:focus-visible { border-color: #6574ed; }
+.catos-notify-variable span { font-size: 0.9em; opacity: 0.85; }
+.catos-notify-content { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 45vh; overflow-y: auto; margin-bottom: 16px; }
+@media (max-width: 768px) {
+	.catos-notify-page table.table tr > th,
+	.catos-notify-page table.table tr > td { padding: 10px; }
+	.catos-notify-rules table.table { min-width: 820px; }
+}

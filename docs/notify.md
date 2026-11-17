@@ -17,7 +17,8 @@ This is an early implementation. Test it on the target OpenWrt release and hardw
 1. Install `catos-notify` and optionally `luci-app-catos-notify`. To display Simplified Chinese when selected in LuCI, also install `luci-i18n-catos-notify-zh-cn` (English needs no additional package).
 2. Create at least one `channel` in LuCI or `/etc/config/catos_notify`. Test it under **Channels** after saving changes (the test also works while the channel is disabled).
 3. Optionally create **Delivery groups** and explicitly add channels as members. A channel can belong to multiple groups.
-4. Under **Event rules**, choose one or more channels and/or groups under **Delivery** and edit that rule's title/body template. No channel or rule has an implicit delivery group.
+4. In the channel editor, **Send test** sends a fixed test notification using saved credentials. Save & Apply edited credentials first; testing also works for disabled channels.
+5. Under **Event rules**, choose one or more channels and/or groups under **Delivery** and edit that rule's title/body template. No channel or rule has an implicit delivery group.
 5. Under **Settings → Service**, enable the service and click **Save & Apply**.
 
 The LuCI interface is organized into **Overview** (status, recent deliveries and manual messages), **Channels**, **Delivery groups**, **Event rules** (including each event's template), **Monitored devices**, and **Settings** (service, network, login, resource and HTTP receiver settings). Each page works with the same `/etc/config/catos_notify` configuration; the core service also works without LuCI.
@@ -51,7 +52,26 @@ printf '%s\n' '{"source":"catos-ddns","event":"ddns.updated","title":"DDNS updat
 
 The corresponding LuCI event rule must use the exact event name `ddns.updated`, select at least one channel or group under **Delivery**, and define a title/body template. A single channel selected both directly and via multiple groups receives one queued message per matching rule. A disabled channel is excluded from normal deliveries; an individual test is still allowed. Notification routing is asynchronous; a successful enqueue response does not mean the remote provider has already delivered the message.
 
-For a rule's templates, the service substitutes literal `{{router}}`, `{{event}}`, `{{time}}`, `{{body}}`, `{{source}}`, `{{severity}}`, `{{interface}}`, `{{device}}`, `{{old}}`, `{{new}}`, and flat fields from `data`/`variables`. Unknown placeholders remain literal. Templates are not shared between rules.
+For a rule's templates, the service substitutes literal `{{router}}`, `{{event}}`, `{{time}}`, `{{body}}`, `{{source}}`, `{{severity}}`, `{{interface}}`, `{{device}}`, `{{old}}`, `{{new}}`, and flat fields from `data`/`variables`. Unknown placeholders remain literal. Templates are not shared between rules. The title and body editors show clickable variables with semantic labels; insertion replaces the selection or inserts at the cursor. Changing the event refreshes those variable choices without rewriting the template.
+
+The common editor variables are `router`, `time`, `event`, `source`, `severity`, and `body`. Built-in event variables reflect the publisher payload:
+
+| Event | Additional editor variables |
+| --- | --- |
+| WAN up/down | `interface` |
+| WAN IPv4/IPv6/prefix change | `interface`, `old`, `new` (addresses/prefixes in CIDR notation) |
+| Public IPv4/IPv6 change | `old`, `new` (public address) |
+| Primary WAN change | `old`, `new` (default-route device) |
+| Unknown device | `device` (MAC), `interface` (discovery bridge) |
+| Known device online/offline | `device` (MAC if configured), `device_name`, `ip` (probe address) |
+| SSH/LuCI login failures | `count`, `window` (seconds), `origin` (last source IP if available) |
+| CPU temperature/load/memory/storage alert | `value`, `threshold` (°C, 1-minute load, or MiB); storage also provides `mount` |
+| Boot/shutdown | Common variables only |
+| Periodic summary | `uptime` (seconds), `load` (1/5/15 minutes), `memory`, `storage` (MiB), `addresses` |
+
+Custom publishers define their own flat `data` keys; the editor lists common variables and explains the `{{key}}` syntax. Existing `old`/`new` templates remain supported by the renderer.
+
+Recent delivery history shows time, message title, result and a content-details action. Details include the original event ID and the exact rendered title/body, displayed as plain text. The internal channel ID is omitted. The core stores bounded JSON Lines in `/tmp/catos-notify/history.jsonl` (up to 100 attempts, trimmed to 80; status returns the latest 20), including failed retries, exhausted deliveries, queue-full attempts and manual tests. Previous metadata-only history cannot recover message content.
 
 The service also registers the `catos.notify` ubus object with `send`, `publish`, `test`, `status` and `token` methods. Methods exposed to LuCI are restricted by the package's rpcd ACL. Third-party packages should use the CLI as root or set their own appropriate ubus ACLs.
 
@@ -112,3 +132,13 @@ The receiver accepts **immediate messages**, not arbitrary URLs or forged system
 - Shutdown alerts are best-effort and may fail if connectivity is already lost. Notification queues and history are deliberately bounded and stored in tmpfs, not durable delivery guarantees.
 
 For a complete functional scope and acceptance checklist, see the [Notify requirements](notify-requirements.zh-CN.md).
+
+### Content regression check
+
+On OpenWrt (with Node available for assertions), or a host with libubox `jshn` built:
+
+```sh
+JSHN_LIB=/path/to/libubox/sh/jshn.sh PATH=/path/to/jshn:$PATH bash scripts/test-notify-content.sh
+```
+
+This exercises the actual shell history, status, publisher and template helpers. It verifies newline/Unicode/delimiter preservation, bounded history and semantic event data without sending provider requests.
